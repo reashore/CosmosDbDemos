@@ -16,6 +16,7 @@ namespace CosmosDb.ClientDemos.Demos
             WriteLine();
             WriteLine(">>> Cleanup <<<");
 
+            // todo replace with Shared
             var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
             var endpoint = config["CosmosEndpoint"];

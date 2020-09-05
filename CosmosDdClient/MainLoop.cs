@@ -90,7 +90,7 @@ Q  Quit
             }
 
             WriteLine();
-            Write("Done. Hit any key to continue");
+            Write("Done. Hit any key to continue.");
             ReadKey(true);
             Clear();
 

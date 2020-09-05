@@ -10,6 +10,7 @@ namespace CosmosDb.ClientDemos.Demos
 	{
 		public static async Task Run()
 		{
+			// todo create instance variable
             const string databaseName = "Database1";
             const string container1Id = "Container1";
             const string container2Id = "Container2";
