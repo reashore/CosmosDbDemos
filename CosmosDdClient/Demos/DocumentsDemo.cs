@@ -311,7 +311,7 @@ namespace CosmosDb.ClientDemos.Demos
 
             if (continuationToken == null)
             {
-                Console.WriteLine($"... no more continuation; resultset complete");
+                Console.WriteLine("... no more continuation; resultset complete");
             }
 
             return continuationToken;

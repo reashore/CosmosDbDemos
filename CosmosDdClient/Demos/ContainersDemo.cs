@@ -7,7 +7,7 @@ namespace CosmosDb.ClientDemos.Demos
 {
 	public static class ContainersDemo
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Debugger.Break();
 
@@ -28,8 +28,8 @@ namespace CosmosDb.ClientDemos.Demos
 			Console.WriteLine(">>> View Containers in mydb <<<");
 
 			var database = Shared.Client.GetDatabase("mydb");
-			var iterator = database.GetContainerQueryIterator<ContainerProperties>();
-			var containers = await iterator.ReadNextAsync();
+			FeedIterator<ContainerProperties> iterator = database.GetContainerQueryIterator<ContainerProperties>();
+			FeedResponse<ContainerProperties> containers = await iterator.ReadNextAsync();
 
 			var count = 0;
 			foreach (var container in containers)
@@ -44,7 +44,7 @@ namespace CosmosDb.ClientDemos.Demos
 			Console.WriteLine($"Total containers in mydb database: {count}");
 		}
 
-		private async static Task ViewContainer(ContainerProperties containerProperties)
+		private static async Task ViewContainer(ContainerProperties containerProperties)
 		{
 			Console.WriteLine($"     Container ID: {containerProperties.Id}");
 			Console.WriteLine($"    Last Modified: {containerProperties.LastModified}");
@@ -56,7 +56,7 @@ namespace CosmosDb.ClientDemos.Demos
 			Console.WriteLine($"       Throughput: {throughput}");
 		}
 
-		private async static Task CreateContainer(
+		private static async Task CreateContainer(
 			string containerId,
 			int throughput = 400,
 			string partitionKey = "/partitionKey")
@@ -82,7 +82,7 @@ namespace CosmosDb.ClientDemos.Demos
 			await ViewContainer(container);	// Intermittent failures!
 		}
 
-		private async static Task DeleteContainer(string containerId)
+		private static async Task DeleteContainer(string containerId)
 		{
 			Console.WriteLine();
 			Console.WriteLine($">>> Delete Container {containerId} in mydb <<<");

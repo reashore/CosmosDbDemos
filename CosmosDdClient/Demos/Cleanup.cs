@@ -82,6 +82,5 @@ namespace CosmosDb.ClientDemos.Demos
 
             }
         }
-
     }
 }

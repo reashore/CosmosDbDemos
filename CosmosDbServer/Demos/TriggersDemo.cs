@@ -125,9 +125,9 @@ namespace CosmosDb.ServerSide.Demos
 
 				return document.id;
 			}
-			catch (CosmosException ex)
+			catch (CosmosException exception)
 			{
-				Console.WriteLine($"Error: {ex.Message}");
+				Console.WriteLine($"Error: {exception.Message}");
 				Console.WriteLine();
 
 				return null;
@@ -136,7 +136,7 @@ namespace CosmosDb.ServerSide.Demos
 
 		private static async Task UpdateDocumentWithValidation(string documentId, string weekdayOff)
 		{
-			var sql = $"SELECT * FROM c WHERE c.id = '{documentId}'";
+			string sql = $"SELECT * FROM c WHERE c.id = '{documentId}'";
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var document = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).FirstOrDefault();
 

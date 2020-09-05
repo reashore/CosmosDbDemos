@@ -9,7 +9,7 @@ namespace CosmosDb.ClientDemos
 	{
 		private static IDictionary<string, Func<Task>> _demoMethods;
 
-		private static void Main(string[] args)
+		private static void Main()
 		{
 			_demoMethods = new Dictionary<string, Func<Task>>
 			{
@@ -23,14 +23,16 @@ namespace CosmosDb.ClientDemos
 			Task.Run(async () =>
 			{
 				ShowMenu();
+
 				while (true)
 				{
 					Console.Write("Selection: ");
 					var input = Console.ReadLine();
 					var demoId = input.ToUpper().Trim();
+
 					if (_demoMethods.Keys.Contains(demoId))
 					{
-						var demoMethod = _demoMethods[demoId];
+						Func<Task> demoMethod = _demoMethods[demoId];
 						await RunDemo(demoMethod);
 					}
 					else if (demoId == "Q")
@@ -60,28 +62,30 @@ Q  Quit
 ");
 		}
 
-		private async static Task RunDemo(Func<Task> demoMethod)
+		private static async Task RunDemo(Func<Task> demoMethod)
 		{
 			try
 			{
 				await demoMethod();
 			}
-			catch (Exception ex)
+			catch (Exception exception)
 			{
-				var message = ex.Message;
-				while (ex.InnerException != null)
+				var message = exception.Message;
+
+				while (exception.InnerException != null)
 				{
-					ex = ex.InnerException;
-					message += Environment.NewLine + ex.Message;
+					exception = exception.InnerException;
+					message += Environment.NewLine + exception.Message;
 				}
-				Console.WriteLine($"Error: {ex.Message}");
+
+				Console.WriteLine($"Error: {exception.Message}");
 			}
+
 			Console.WriteLine();
-			Console.Write("Done. Press any key to continue...");
+			Console.Write("Done.");
 			Console.ReadKey(true);
 			Console.Clear();
 			ShowMenu();
 		}
-
-	}
+    }
 }

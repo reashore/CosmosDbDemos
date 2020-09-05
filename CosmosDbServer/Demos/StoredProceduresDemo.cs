@@ -206,9 +206,9 @@ namespace CosmosDb.ServerSide.Demos
 				// Should fail with no country and enforceSchema = true
 				var result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
 			}
-			catch (CosmosException ex)
+			catch (CosmosException exception)
 			{
-				Console.WriteLine($"Error: {ex.Message}");
+				Console.WriteLine($"Error: {exception.Message}");
 			}
 		}
 

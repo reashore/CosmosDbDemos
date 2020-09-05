@@ -40,5 +40,4 @@ namespace CosmosDb.ClientDemos.Demos
 		[JsonProperty(PropertyName = "stateProvinceName")]
 		public string StateProvinceName { get; set; }
 	}
-
 }

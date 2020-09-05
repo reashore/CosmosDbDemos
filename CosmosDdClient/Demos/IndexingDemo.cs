@@ -9,7 +9,7 @@ namespace CosmosDb.ClientDemos.Demos
 {
 	public static class IndexingDemo
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Debugger.Break();
 
@@ -18,7 +18,7 @@ namespace CosmosDb.ClientDemos.Demos
 			await SpatialIndexes();	
 		}
 
-		private async static Task ExcludedPaths()
+		private static async Task ExcludedPaths()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Exclude Index Paths <<<");
@@ -101,17 +101,17 @@ namespace CosmosDb.ClientDemos.Demos
 			{
 				result = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
 			}
-			catch (Exception ex)
+			catch (Exception exception)
 			{
-				Console.WriteLine($"Sort on unindexed property failed");
-				Console.WriteLine(ex.Message);
+				Console.WriteLine("Sort on unindexed property failed");
+				Console.WriteLine(exception.Message);
 			}
 
 			// Delete the container
 			await container.DeleteContainerAsync();
 		}
 
-		private async static Task CompositeIndexes()
+		private static async Task CompositeIndexes()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Composite Indexes <<<");
@@ -135,9 +135,9 @@ namespace CosmosDb.ClientDemos.Demos
 			{
 				var page1 = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
 			}
-			catch (Exception ex)
+			catch (Exception exception)
 			{
-				Console.WriteLine(ex.Message);
+				Console.WriteLine(exception.Message);
 				Console.WriteLine();
 			}
 
@@ -168,7 +168,7 @@ namespace CosmosDb.ClientDemos.Demos
 			await container.ReplaceContainerAsync(containerProperties);
 		}
 
-		private async static Task SpatialIndexes()
+		private static async Task SpatialIndexes()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Spatial Indexes <<<");

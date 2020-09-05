@@ -2,6 +2,7 @@
 using Microsoft.Azure.Cosmos.Scripts;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@ namespace CosmosDb.ServerSide.Demos
 {
     public static class Cleanup
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> Cleanup <<<");
@@ -36,7 +37,7 @@ namespace CosmosDb.ServerSide.Demos
 
                 var container = Shared.Client.GetContainer("mydb", "mystore");
 
-                var documentKeys = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+                List<dynamic> documentKeys = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
 				foreach (var documentKey in documentKeys)
 				{
 					string id = documentKey.id;
