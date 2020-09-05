@@ -130,6 +130,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 			// Query won't work without explicitly defined composite indexes
 			Console.WriteLine("Multi-property ORDER BY without composite indexes");
+
 			try
 			{
 				var page1 = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
@@ -157,6 +158,7 @@ namespace CosmosDb.ClientDemos.Demos
 			// The query works now
 			Console.WriteLine("Multi-property ORDER BY with composite indexes");
 			var page = await (container.GetItemQueryIterator<Customer>(sql)).ReadNextAsync();
+
 			foreach (var doc in page)
 			{
 				Console.WriteLine($"{doc.Name,-42}{doc.Address.Location.StateProvinceName,-12}{doc.Address.Location.City,-30}");
@@ -208,6 +210,7 @@ namespace CosmosDb.ClientDemos.Demos
 						coordinates = new[] { longitude, latitude },
 					},
 				};
+
 				await container.CreateItemAsync(doc, new PartitionKey(doc.state));
 			}
 
@@ -233,7 +236,6 @@ namespace CosmosDb.ClientDemos.Demos
 			list = result.ToList();
 			Console.WriteLine($"Query unindexed spatial property  Cost = {result.RequestCharge} RUs for {list.Count} results");
 
-			// Delete the container
 			await container.DeleteContainerAsync();
 		}
     }

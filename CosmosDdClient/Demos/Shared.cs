@@ -9,9 +9,9 @@ namespace CosmosDb.ClientDemos.Demos
 
 		static Shared()
 		{
-			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-            var endpoint = config["CosmosEndpoint"];
-            var masterKey = config["CosmosMasterKey"];
+			IConfigurationRoot config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+            string endpoint = config["CosmosEndpoint"];
+            string masterKey = config["CosmosMasterKey"];
 
 			Client = new CosmosClient(endpoint, masterKey);
 		}

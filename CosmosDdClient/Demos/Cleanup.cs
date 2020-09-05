@@ -20,7 +20,7 @@ namespace CosmosDb.ClientDemos.Demos
             var endpoint = config["CosmosEndpoint"];
             var masterKey = config["CosmosMasterKey"];
 
-            using (var client = new CosmosClient(endpoint, masterKey))
+            using (CosmosClient client = new CosmosClient(endpoint, masterKey))
             {
                 // Delete documents created by demos
                 Console.WriteLine("Deleting documents created by demos...");
@@ -38,6 +38,7 @@ namespace CosmosDb.ClientDemos.Demos
                 var container = Shared.Client.GetContainer("mydb", "mystore");
 
                 List<dynamic> documentKeys = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+
                 foreach (var documentKey in documentKeys)
                 {
                     string id = documentKey.id;
@@ -49,6 +50,7 @@ namespace CosmosDb.ClientDemos.Demos
                 Console.WriteLine("Deleting all stored procedures...");
                 var sprocIterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
                 var sprocs = await sprocIterator.ReadNextAsync();
+
                 foreach (var sproc in sprocs)
                 {
                     await container.Scripts.DeleteStoredProcedureAsync(sproc.Id);
@@ -58,6 +60,7 @@ namespace CosmosDb.ClientDemos.Demos
                 Console.WriteLine("Deleting all triggers...");
                 var triggerIterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
                 var triggers = await triggerIterator.ReadNextAsync();
+
                 foreach (var trigger in triggers)
                 {
                     await container.Scripts.DeleteStoredProcedureAsync(trigger.Id);
@@ -67,6 +70,7 @@ namespace CosmosDb.ClientDemos.Demos
                 Console.WriteLine("Deleting all user defined functions...");
                 var udfIterator = container.Scripts.GetUserDefinedFunctionQueryIterator<UserDefinedFunctionProperties>();
                 var udfs = await sprocIterator.ReadNextAsync();
+
                 foreach (var udf in udfs)
                 {
                     await container.Scripts.DeleteUserDefinedFunctionAsync(udf.Id);
@@ -80,7 +84,6 @@ namespace CosmosDb.ClientDemos.Demos
                 //	{
                 //		await client.DeleteUserAsync(user.SelfLink);
                 //	}
-
             }
         }
     }
