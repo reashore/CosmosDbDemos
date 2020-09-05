@@ -10,14 +10,16 @@ namespace CosmosDb.ClientDemos.Demos
 	{
 		public static async Task Run()
 		{
-			Debugger.Break();
+            const string databaseName = "Database1";
+
+            Debugger.Break();
 
 			await ViewDatabases();
 
-			await CreateDatabase();
+			await CreateDatabase(databaseName);
 			await ViewDatabases();
 
-			await DeleteDatabase();
+			await DeleteDatabase(databaseName);
 			await ViewDatabases();
 		}
 
@@ -45,21 +47,23 @@ namespace CosmosDb.ClientDemos.Demos
 			WriteLine($"\nTotal databases: {count}");
 		}
 
-		private static async Task CreateDatabase()
+		public static async Task CreateDatabase(string databaseName)
 		{
-			WriteLine("\n>>> Create Database <<<");
+			WriteLine($"\n>>> Create Database {databaseName} <<<");
 
-			var result = await Shared.Client.CreateDatabaseAsync("MyNewDatabase");
-			var database = result.Resource;
+			DatabaseResponse result = await Shared.Client.CreateDatabaseIfNotExistsAsync(databaseName);
+			DatabaseProperties database = result.Resource;
+            // todo check StatusCode
 
 			WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
 		}
 
-		private static async Task DeleteDatabase()
+		private static async Task DeleteDatabase(string databaseName)
 		{
-			WriteLine("\n>>> Delete Database <<<");
+			WriteLine($"\n>>> Delete Database {databaseName} <<<");
 
-			await Shared.Client.GetDatabase("MyNewDatabase").DeleteAsync();
+			DatabaseResponse result = await Shared.Client.GetDatabase(databaseName).DeleteAsync();
+			// todo check result.StatusCode
 		}
     }
 }
