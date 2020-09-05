@@ -25,24 +25,27 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task ViewContainers()
 		{
-			WriteLine();
-			WriteLine(">>> View Containers in mydb <<<");
+			WriteLine("\n>>> View Containers in mydb <<<");
 
 			var database = Shared.Client.GetDatabase("mydb");
 			FeedIterator<ContainerProperties> iterator = database.GetContainerQueryIterator<ContainerProperties>();
 			FeedResponse<ContainerProperties> containers = await iterator.ReadNextAsync();
 
+            if (containers.Count == 0)
+            {
+				WriteLine("No contaners");
+            }
+
 			var count = 0;
+
 			foreach (var container in containers)
 			{
 				count++;
-				WriteLine();
-				WriteLine($" Container #{count}");
+				WriteLine($"\n Container #{count}");
 				await ViewContainer(container);
 			}
 
-			WriteLine();
-			WriteLine($"Total containers in mydb database: {count}");
+			WriteLine($"\nTotal containers in mydb database: {count}");
 		}
 
 		private static async Task ViewContainer(ContainerProperties containerProperties)
@@ -57,17 +60,11 @@ namespace CosmosDb.ClientDemos.Demos
 			WriteLine($"       Throughput: {throughput}");
 		}
 
-		private static async Task CreateContainer(
-			string containerId,
-			int throughput = 400,
-			string partitionKey = "/partitionKey")
+		private static async Task CreateContainer(string containerId, int throughput = 400, string partitionKey = "/partitionKey")
 		{
-			WriteLine();
-			WriteLine($">>> Create Container {containerId} in mydb <<<");
-			WriteLine();
-			WriteLine($" Throughput: {throughput} RU/sec");
-			WriteLine($" Partition key: {partitionKey}");
-			WriteLine();
+			WriteLine($"\n>>> Create Container {containerId} in mydb <<<");
+			WriteLine($"\n Throughput: {throughput} RU/sec");
+			WriteLine($" Partition key: {partitionKey}\n");
 
 			var containerDef = new ContainerProperties
 			{
@@ -85,8 +82,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task DeleteContainer(string containerId)
 		{
-			WriteLine();
-			WriteLine($">>> Delete Container {containerId} in mydb <<<");
+			WriteLine($"\n>>> Delete Container {containerId} in mydb <<<");
 
 			var container = Shared.Client.GetContainer("mydb", containerId);
 			await container.DeleteContainerAsync();

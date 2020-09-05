@@ -23,27 +23,31 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task ViewDatabases()
 		{
-			WriteLine();
-			WriteLine(">>> View Databases <<<");
+			WriteLine("\n>>> View Databases <<<");
 
 			FeedIterator<DatabaseProperties> iterator = Shared.Client.GetDatabaseQueryIterator<DatabaseProperties>();
 			FeedResponse<DatabaseProperties> databases = await iterator.ReadNextAsync();
 
-			var count = 0;
-			foreach (var database in databases)
+            if (databases.Count == 0)
+            {
+				WriteLine("No databases");
+                return;
+            }
+
+            var count = 0;
+
+			foreach (DatabaseProperties database in databases)
 			{
 				count++;
 				WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
 			}
 
-			WriteLine();
-			WriteLine($"Total databases: {count}");
+			WriteLine($"\nTotal databases: {count}");
 		}
 
 		private static async Task CreateDatabase()
 		{
-			WriteLine();
-			WriteLine(">>> Create Database <<<");
+			WriteLine("\n>>> Create Database <<<");
 
 			var result = await Shared.Client.CreateDatabaseAsync("MyNewDatabase");
 			var database = result.Resource;
@@ -53,8 +57,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task DeleteDatabase()
 		{
-			WriteLine();
-			WriteLine(">>> Delete Database <<<");
+			WriteLine("\n>>> Delete Database <<<");
 
 			await Shared.Client.GetDatabase("MyNewDatabase").DeleteAsync();
 		}

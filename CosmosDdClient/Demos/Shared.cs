@@ -9,11 +9,16 @@ namespace CosmosDb.ClientDemos.Demos
 
 		static Shared()
 		{
-			IConfigurationRoot config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-            string endpoint = config["CosmosEndpoint"];
-            string masterKey = config["CosmosMasterKey"];
+			IConfigurationRoot configurationRoot = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+            string endpoint = configurationRoot["CosmosEndpoint"];
+            string masterKey = configurationRoot["CosmosMasterKey"];
 
-			Client = new CosmosClient(endpoint, masterKey);
+            CosmosClientOptions cosmosClientOptions = new CosmosClientOptions()
+            {
+                ApplicationName = "Cosmos DB Demos"
+            };
+
+			Client = new CosmosClient(endpoint, masterKey, cosmosClientOptions);
 		}
 	}
 }

@@ -330,7 +330,7 @@ namespace CosmosDb.ClientDemos.Demos
 			WriteLine("Querying for UK customers (LINQ)");
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
-			var q = from d in container.GetItemLinqQueryable<Customer>(allowSynchronousQueryExecution: true)
+			var q = from d in container.GetItemLinqQueryable<Customer>(true)
 					where d.Address.CountryRegionName == "United Kingdom"
 					select new
 					{
