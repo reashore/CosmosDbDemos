@@ -64,8 +64,8 @@ namespace CosmosDb.ServerSide.Demos
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
-			var iterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
-			var sprocs = await iterator.ReadNextAsync();
+			FeedIterator<StoredProcedureProperties> iterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
+			FeedResponse<StoredProcedureProperties> sprocs = await iterator.ReadNextAsync();
 
 			var count = 0;
 			foreach (var sproc in sprocs)
@@ -107,7 +107,7 @@ namespace CosmosDb.ServerSide.Demos
 
 			var scripts = Shared.Client.GetContainer("mydb", "mystore").Scripts;
 			var pk = new PartitionKey(string.Empty);
-			var result = await scripts.ExecuteStoredProcedureAsync<string>("spHelloWorld", pk, null);
+			StoredProcedureExecuteResponse<string> result = await scripts.ExecuteStoredProcedureAsync<string>("spHelloWorld", pk, null);
 			var message = result.Resource;
 
 			Console.WriteLine($"Result: {message}");
@@ -133,7 +133,7 @@ namespace CosmosDb.ServerSide.Demos
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var pk = new PartitionKey(documentDefinition.address.postalCode);
-			var result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
+			StoredProcedureExecuteResponse<dynamic> result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
 			var document = result.Resource;
 
 			var country = document.address.countryRegionName;
@@ -166,7 +166,7 @@ namespace CosmosDb.ServerSide.Demos
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var pk = new PartitionKey(documentDefinition.address.postalCode);
-			var result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
+			StoredProcedureExecuteResponse<dynamic> result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
 			var document = result.Resource;
 
 			// Deserialize new document as JObject (use dictionary-style indexers to access dynamic properties)
@@ -204,7 +204,7 @@ namespace CosmosDb.ServerSide.Demos
 			try
 			{
 				// Should fail with no country and enforceSchema = true
-				var result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
+				StoredProcedureExecuteResponse<dynamic> result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
 			}
 			catch (CosmosException exception)
 			{
@@ -226,19 +226,19 @@ namespace CosmosDb.ServerSide.Demos
 			var pk12345 = new PartitionKey("12345");
 			var pk54321 = new PartitionKey("54321");
 
-			var result1 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk12345, new[] { docDef1 });
+			StoredProcedureExecuteResponse<dynamic> result1 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk12345, new[] { docDef1 });
 			var doc1 = result1.Resource;
 			Console.WriteLine($"New document in PK '{doc1.address.postalCode}', generated ID '{doc1.id}' for '{doc1.firstName} {doc1.lastName}'");
 
-			var result2 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk12345, new[] { docDef2 });
+			StoredProcedureExecuteResponse<dynamic> result2 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk12345, new[] { docDef2 });
 			var doc2 = result2.Resource;
 			Console.WriteLine($"New document in PK '{doc2.address.postalCode}', generated ID '{doc2.id}' for '{doc2.firstName} {doc2.lastName}'");
 
-			var result3 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk12345, new[] { docDef3 });
+			StoredProcedureExecuteResponse<dynamic> result3 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk12345, new[] { docDef3 });
 			var doc3 = result3.Resource;
 			Console.WriteLine($"New document in PK '{doc3.address.postalCode}', generated ID '{doc3.id}' for '{doc3.firstName} {doc3.lastName}'");
 
-			var result4 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk54321, new[] { docDef4 });
+			StoredProcedureExecuteResponse<dynamic> result4 = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spGenerateId", pk54321, new[] { docDef4 });
 			var doc4 = result4.Resource;
 			Console.WriteLine($"New document in PK '{doc4.address.postalCode}', generated ID '{doc4.id}' for '{doc4.firstName} {doc4.lastName}'");
 
@@ -253,7 +253,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine();
 			Console.WriteLine("Execute spBulkInsert");
 
-			var docs = new List<dynamic>();
+			List<dynamic> docs = new List<dynamic>();
 			const int total = 5000;
 			for (var i = 1; i <= total; i++)
 			{
@@ -273,7 +273,7 @@ namespace CosmosDb.ServerSide.Demos
 			var totalInserted = 0;
 			while (totalInserted < total)
 			{
-				var result = await container.Scripts.ExecuteStoredProcedureAsync<int>("spBulkInsert", pk, new[] { docs });
+				StoredProcedureExecuteResponse<int> result = await container.Scripts.ExecuteStoredProcedureAsync<int>("spBulkInsert", pk, new[] { docs });
 				var inserted = result.Resource;
 				totalInserted += inserted;
 				var remaining = total - totalInserted;
@@ -304,7 +304,7 @@ namespace CosmosDb.ServerSide.Demos
 			var totalDeleted = 0;
 			while (continuationFlag)
 			{
-				var result = await container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>("spBulkDelete", pk, new[] { sql });
+				StoredProcedureExecuteResponse<BulkDeleteResponse> result = await container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>("spBulkDelete", pk, new[] { sql });
 				var response = result.Resource;
 				continuationFlag = response.ContinuationFlag;
 				var deleted = response.Count;

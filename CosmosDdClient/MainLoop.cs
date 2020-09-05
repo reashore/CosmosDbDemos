@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CosmosDb.ClientDemos.Demos;
 
+using static System.Console;
+
 namespace CosmosDb.ClientDemos
 {
     public class MainLoop
@@ -26,8 +28,8 @@ namespace CosmosDb.ClientDemos
 
                 while (true)
                 {
-                    Console.Write("Selection: ");
-                    var input = Console.ReadLine();
+                    Write("Selection: ");
+                    var input = ReadLine();
 
                     if (input == null)
                     {
@@ -47,7 +49,7 @@ namespace CosmosDb.ClientDemos
                     }
                     else
                     {
-                        Console.WriteLine($"?{input}");
+                        WriteLine($"?{input}");
                     }
                 }
             }).Wait();
@@ -55,7 +57,7 @@ namespace CosmosDb.ClientDemos
 
         private static void ShowMenu()
         {
-            Console.WriteLine(@"Cosmos DB SQL API .NET SDK demos
+            WriteLine(@"Cosmos DB SQL API .NET SDK demos
 
 DB Databases
 CO Containers
@@ -84,13 +86,13 @@ Q  Quit
                     message += Environment.NewLine + exception.Message;
                 }
 
-                Console.WriteLine($"Error: {exception.Message}");
+                WriteLine($"Error: {exception.Message}");
             }
 
-            Console.WriteLine();
-            Console.Write("Done.");
-            Console.ReadKey(true);
-            Console.Clear();
+            WriteLine();
+            Write("Done.");
+            ReadKey(true);
+            Clear();
 
             ShowMenu();
         }

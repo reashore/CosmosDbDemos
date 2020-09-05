@@ -47,8 +47,9 @@ namespace CosmosDb.ServerSide.Demos
 
                 // Delete all stored procedures
                 Console.WriteLine("Deleting all stored procedures...");
-                var sprocIterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
-                var sprocs = await sprocIterator.ReadNextAsync();
+                FeedIterator<StoredProcedureProperties> sprocIterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
+                FeedResponse<StoredProcedureProperties> sprocs = await sprocIterator.ReadNextAsync();
+
                 foreach (var sproc in sprocs)
                 {
                     await container.Scripts.DeleteStoredProcedureAsync(sproc.Id);
@@ -56,8 +57,9 @@ namespace CosmosDb.ServerSide.Demos
 
                 // Delete all triggers
                 Console.WriteLine("Deleting all triggers...");
-                var triggerIterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
-                var triggers = await triggerIterator.ReadNextAsync();
+                FeedIterator<TriggerProperties> triggerIterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
+                FeedResponse<TriggerProperties> triggers = await triggerIterator.ReadNextAsync();
+
                 foreach (var trigger in triggers)
                 {
                     await container.Scripts.DeleteTriggerAsync(trigger.Id);
@@ -65,8 +67,9 @@ namespace CosmosDb.ServerSide.Demos
 
                 // Delete all user defined functions
                 Console.WriteLine("Deleting all user defined functions...");
-                var udfIterator = container.Scripts.GetUserDefinedFunctionQueryIterator<UserDefinedFunctionProperties>();
-                var udfs = await sprocIterator.ReadNextAsync();
+                FeedIterator<UserDefinedFunctionProperties> udfIterator = container.Scripts.GetUserDefinedFunctionQueryIterator<UserDefinedFunctionProperties>();
+                FeedResponse<StoredProcedureProperties> udfs = await sprocIterator.ReadNextAsync();
+
                 foreach (var udf in udfs)
                 {
                     await container.Scripts.DeleteUserDefinedFunctionAsync(udf.Id);

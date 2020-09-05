@@ -1,7 +1,8 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+
+using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
@@ -22,8 +23,8 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task ViewDatabases()
 		{
-			Console.WriteLine();
-			Console.WriteLine(">>> View Databases <<<");
+			WriteLine();
+			WriteLine(">>> View Databases <<<");
 
 			FeedIterator<DatabaseProperties> iterator = Shared.Client.GetDatabaseQueryIterator<DatabaseProperties>();
 			FeedResponse<DatabaseProperties> databases = await iterator.ReadNextAsync();
@@ -32,31 +33,30 @@ namespace CosmosDb.ClientDemos.Demos
 			foreach (var database in databases)
 			{
 				count++;
-				Console.WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
+				WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
 			}
 
-			Console.WriteLine();
-			Console.WriteLine($"Total databases: {count}");
+			WriteLine();
+			WriteLine($"Total databases: {count}");
 		}
 
 		private static async Task CreateDatabase()
 		{
-			Console.WriteLine();
-			Console.WriteLine(">>> Create Database <<<");
+			WriteLine();
+			WriteLine(">>> Create Database <<<");
 
 			var result = await Shared.Client.CreateDatabaseAsync("MyNewDatabase");
 			var database = result.Resource;
 
-			Console.WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
+			WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
 		}
 
 		private static async Task DeleteDatabase()
 		{
-			Console.WriteLine();
-			Console.WriteLine(">>> Delete Database <<<");
+			WriteLine();
+			WriteLine(">>> Delete Database <<<");
 
 			await Shared.Client.GetDatabase("MyNewDatabase").DeleteAsync();
 		}
-
-	}
+    }
 }

@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+
+using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
@@ -20,9 +23,9 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task ExcludedPaths()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Exclude Index Paths <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Exclude Index Paths <<<");
+			WriteLine();
 
 			var containerProps = new ContainerProperties
 			{
@@ -60,39 +63,39 @@ namespace CosmosDb.ClientDemos.Demos
 			// Querying on indexed properties is most efficient
 
 			var sql = "SELECT * FROM c WHERE c.title = 'Document 90'";
-			var result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
-			Console.WriteLine($"Query indexed string property     Cost = {result.RequestCharge} RUs");
+			FeedResponse<dynamic> result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
+			WriteLine($"Query indexed string property     Cost = {result.RequestCharge} RUs");
 
 			sql = "SELECT * FROM c WHERE c.rating = 90";
 			result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
-			Console.WriteLine($"Query indexed number property     Cost = {result.RequestCharge} RUs");
-			Console.WriteLine();
+			WriteLine($"Query indexed number property     Cost = {result.RequestCharge} RUs");
+			WriteLine();
 
 			// Querying on unindexed properties requires a sequential scan, and costs more RUs
 
 			sql = "SELECT * FROM c WHERE c.miscellaneous.title = 'Document 90'";
 			result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
-			Console.WriteLine($"Query unindexed string property   Cost = {result.RequestCharge} RUs");
+			WriteLine($"Query unindexed string property   Cost = {result.RequestCharge} RUs");
 
 			// Excluded property that was explictly included gets indexed
 
 			sql = "SELECT * FROM c WHERE c.miscellaneous.rating = 90";
 			result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
-			Console.WriteLine($"Query indexed number property     Cost = {result.RequestCharge} RUs");
-			Console.WriteLine();
+			WriteLine($"Query indexed number property     Cost = {result.RequestCharge} RUs");
+			WriteLine();
 
 			// Sorting on indexed properties is supported
 
 			sql = "SELECT * FROM c ORDER BY c.title";
 			result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
-			var docs = result.ToList();
-			Console.WriteLine($"Sort on indexed string property   Cost = {result.RequestCharge} RUs");
+			List<dynamic> docs = result.ToList();
+			WriteLine($"Sort on indexed string property   Cost = {result.RequestCharge} RUs");
 
 			sql = "SELECT * FROM c ORDER BY c.rating";
 			result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
 			docs = result.ToList();
-			Console.WriteLine($"Sort on indexed number property   Cost = {result.RequestCharge} RUs");
-			Console.WriteLine();
+			WriteLine($"Sort on indexed number property   Cost = {result.RequestCharge} RUs");
+			WriteLine();
 
 			// Sorting on unindexed properties is not supported
 
@@ -103,8 +106,8 @@ namespace CosmosDb.ClientDemos.Demos
 			}
 			catch (Exception exception)
 			{
-				Console.WriteLine("Sort on unindexed property failed");
-				Console.WriteLine(exception.Message);
+				WriteLine("Sort on unindexed property failed");
+				WriteLine(exception.Message);
 			}
 
 			await container.DeleteContainerAsync();
@@ -112,9 +115,9 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task CompositeIndexes()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Composite Indexes <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Composite Indexes <<<");
+			WriteLine();
 
 			const string sql = @"
 				SELECT TOP 20 *
@@ -129,16 +132,16 @@ namespace CosmosDb.ClientDemos.Demos
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
 			// Query won't work without explicitly defined composite indexes
-			Console.WriteLine("Multi-property ORDER BY without composite indexes");
+			WriteLine("Multi-property ORDER BY without composite indexes");
 
 			try
 			{
-				var page1 = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
+				FeedResponse<dynamic> page1 = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
 			}
 			catch (Exception exception)
 			{
-				Console.WriteLine(exception.Message);
-				Console.WriteLine();
+				WriteLine(exception.Message);
+				WriteLine();
 			}
 
 			// Retrieve the container's current indexing policy
@@ -146,7 +149,7 @@ namespace CosmosDb.ClientDemos.Demos
 			var containerProperties = response.Resource;
 
 			// Add composite indexes to the indexing policy
-			var compositePaths = new Collection<CompositePath>
+			Collection<CompositePath> compositePaths = new Collection<CompositePath>
 			{
 				new CompositePath { Path = "/address/location/stateProvinceName", Order = CompositePathSortOrder.Ascending },
 				new CompositePath { Path = "/address/location/city", Order = CompositePathSortOrder.Ascending },
@@ -156,12 +159,12 @@ namespace CosmosDb.ClientDemos.Demos
 			await container.ReplaceContainerAsync(containerProperties);
 
 			// The query works now
-			Console.WriteLine("Multi-property ORDER BY with composite indexes");
-			var page = await (container.GetItemQueryIterator<Customer>(sql)).ReadNextAsync();
+			WriteLine("Multi-property ORDER BY with composite indexes");
+			FeedResponse<Customer> page = await (container.GetItemQueryIterator<Customer>(sql)).ReadNextAsync();
 
 			foreach (var doc in page)
 			{
-				Console.WriteLine($"{doc.Name,-42}{doc.Address.Location.StateProvinceName,-12}{doc.Address.Location.City,-30}");
+				WriteLine($"{doc.Name,-42}{doc.Address.Location.StateProvinceName,-12}{doc.Address.Location.City,-30}");
 			}
 
 			// Remove composite indexes from the indexing policy
@@ -171,9 +174,9 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task SpatialIndexes()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Spatial Indexes <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Spatial Indexes <<<");
+			WriteLine();
 
 			var containerDef = new ContainerProperties
 			{
@@ -221,9 +224,9 @@ namespace CosmosDb.ClientDemos.Demos
 				   'coordinates': [-73.992, 40.73104]
 				 }) <= 10";
 
-			var result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
-			var list = result.ToList();
-			Console.WriteLine($"Query indexed spatial property    Cost = {result.RequestCharge} RUs for {list.Count} results");
+			FeedResponse<dynamic> result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
+			List<dynamic> list = result.ToList();
+			WriteLine($"Query indexed spatial property    Cost = {result.RequestCharge} RUs for {list.Count} results");
 
 			sql = @"
 				SELECT * FROM c WHERE
@@ -234,7 +237,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 			result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
 			list = result.ToList();
-			Console.WriteLine($"Query unindexed spatial property  Cost = {result.RequestCharge} RUs for {list.Count} results");
+			WriteLine($"Query unindexed spatial property  Cost = {result.RequestCharge} RUs for {list.Count} results");
 
 			await container.DeleteContainerAsync();
 		}

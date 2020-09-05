@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Scripts;
 using Microsoft.Extensions.Configuration;
+
+using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
@@ -12,8 +13,8 @@ namespace CosmosDb.ClientDemos.Demos
 	{
         public static async Task Run()
         {
-            Console.WriteLine();
-            Console.WriteLine(">>> Cleanup <<<");
+            WriteLine();
+            WriteLine(">>> Cleanup <<<");
 
             var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
@@ -23,7 +24,7 @@ namespace CosmosDb.ClientDemos.Demos
             using (CosmosClient client = new CosmosClient(endpoint, masterKey))
             {
                 // Delete documents created by demos
-                Console.WriteLine("Deleting documents created by demos...");
+                WriteLine("Deleting documents created by demos...");
                 const string sql = @"
 					SELECT c._self, c.address.postalCode
 					FROM c
@@ -47,9 +48,9 @@ namespace CosmosDb.ClientDemos.Demos
                 }
 
                 // Delete all stored procedures
-                Console.WriteLine("Deleting all stored procedures...");
-                var sprocIterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
-                var sprocs = await sprocIterator.ReadNextAsync();
+                WriteLine("Deleting all stored procedures...");
+                FeedIterator<StoredProcedureProperties> sprocIterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
+                FeedResponse<StoredProcedureProperties> sprocs = await sprocIterator.ReadNextAsync();
 
                 foreach (var sproc in sprocs)
                 {
@@ -57,9 +58,9 @@ namespace CosmosDb.ClientDemos.Demos
                 }
 
                 // Delete all triggers
-                Console.WriteLine("Deleting all triggers...");
-                var triggerIterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
-                var triggers = await triggerIterator.ReadNextAsync();
+                WriteLine("Deleting all triggers...");
+                FeedIterator<TriggerProperties> triggerIterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
+                FeedResponse<TriggerProperties> triggers = await triggerIterator.ReadNextAsync();
 
                 foreach (var trigger in triggers)
                 {
@@ -67,9 +68,9 @@ namespace CosmosDb.ClientDemos.Demos
                 }
 
                 // Delete all user defined functions
-                Console.WriteLine("Deleting all user defined functions...");
-                var udfIterator = container.Scripts.GetUserDefinedFunctionQueryIterator<UserDefinedFunctionProperties>();
-                var udfs = await sprocIterator.ReadNextAsync();
+                WriteLine("Deleting all user defined functions...");
+                FeedIterator<UserDefinedFunctionProperties> udfIterator = container.Scripts.GetUserDefinedFunctionQueryIterator<UserDefinedFunctionProperties>();
+                FeedResponse<StoredProcedureProperties> udfs = await sprocIterator.ReadNextAsync();
 
                 foreach (var udf in udfs)
                 {

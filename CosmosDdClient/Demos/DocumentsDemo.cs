@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
@@ -34,9 +37,9 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task CreateDocuments()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Create Documents <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Create Documents <<<");
+			WriteLine();
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
@@ -59,7 +62,7 @@ namespace CosmosDb.ClientDemos.Demos
 			};
 
 			await container.CreateItemAsync(document1Dynamic, new PartitionKey("11229"));
-			Console.WriteLine($"Created new document {document1Dynamic.id} from dynamic object");
+			WriteLine($"Created new document {document1Dynamic.id} from dynamic object");
 
 			var document2Json = $@"
 				{{
@@ -79,7 +82,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 			var document2Object = JsonConvert.DeserializeObject<JObject>(document2Json);
 			await container.CreateItemAsync(document2Object, new PartitionKey("11229"));
-			Console.WriteLine($"Created new document {document2Object["id"].Value<string>()} from JSON string");
+			WriteLine($"Created new document {document2Object["id"].Value<string>()} from JSON string");
 
 			var document3Poco = new Customer
 			{
@@ -100,73 +103,73 @@ namespace CosmosDb.ClientDemos.Demos
 			};
 
 			await container.CreateItemAsync(document3Poco, new PartitionKey("11229"));
-			Console.WriteLine($"Created new document {document3Poco.Id} from typed object");
+			WriteLine($"Created new document {document3Poco.Id} from typed object");
 		}
 
 		private static async Task QueryDocuments()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Query Documents (SQL) <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Query Documents (SQL) <<<");
+			WriteLine();
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
-			Console.WriteLine("Querying for new customer documents (SQL)");
+			WriteLine("Querying for new customer documents (SQL)");
 			const string sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
 
 			// Query for dynamic objects
-			var iterator1 = container.GetItemQueryIterator<dynamic>(sql);
-			var documents1 = await iterator1.ReadNextAsync();
+			FeedIterator<dynamic> iterator1 = container.GetItemQueryIterator<dynamic>(sql);
+			FeedResponse<dynamic> documents1 = await iterator1.ReadNextAsync();
 			var count = 0;
 			foreach (var document in documents1)
 			{
-				Console.WriteLine($" ({++count}) Id: {document.id}; Name: {document.name};");
+				WriteLine($" ({++count}) Id: {document.id}; Name: {document.name};");
 
 				// Dynamic object can be converted into a defined type...
 				var customer = JsonConvert.DeserializeObject<Customer>(document.ToString());
-				Console.WriteLine($"     City: {customer.Address.Location.City}");
+				WriteLine($"     City: {customer.Address.Location.City}");
 			}
-			Console.WriteLine($"Retrieved {count} new documents as dynamic");
-			Console.WriteLine();
+			WriteLine($"Retrieved {count} new documents as dynamic");
+			WriteLine();
 
 			// Or query for defined types; e.g., Customer
-			var iterator2 = container.GetItemQueryIterator<Customer>(sql);
-			var documents2 = await iterator2.ReadNextAsync();
+			FeedIterator<Customer> iterator2 = container.GetItemQueryIterator<Customer>(sql);
+			FeedResponse<Customer> documents2 = await iterator2.ReadNextAsync();
 			count = 0;
 			foreach (var customer in documents2)
 			{
-				Console.WriteLine($" ({++count}) Id: {customer.Id}; Name: {customer.Name};");
-				Console.WriteLine($"     City: {customer.Address.Location.City}");
+				WriteLine($" ({++count}) Id: {customer.Id}; Name: {customer.Name};");
+				WriteLine($"     City: {customer.Address.Location.City}");
 			}
-			Console.WriteLine($"Retrieved {count} new documents as Customer");
-			Console.WriteLine();
+			WriteLine($"Retrieved {count} new documents as Customer");
+			WriteLine();
 
 			// You only get back the first "page" (up to MaxItemCount)
 		}
 
         private static async Task QueryWithStatefulPaging()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Query Documents (paged results, stateful) <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Query Documents (paged results, stateful) <<<");
+			WriteLine();
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			const string sql = "SELECT * FROM c";
 
 			// Get first page of large resultset
-			Console.WriteLine("Querying for all documents (first page)");
-			var iterator = container.GetItemQueryIterator<Customer>(sql);
-			var documents = await iterator.ReadNextAsync();
+			WriteLine("Querying for all documents (first page)");
+			FeedIterator<Customer> iterator = container.GetItemQueryIterator<Customer>(sql);
+			FeedResponse<Customer> documents = await iterator.ReadNextAsync();
 			var itemCount = 0;
 			foreach (var customer in documents)
 			{
-				Console.WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+				WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
 			}
-			Console.WriteLine($"Retrieved {itemCount} documents in first page");
-			Console.WriteLine();
+			WriteLine($"Retrieved {itemCount} documents in first page");
+			WriteLine();
 
 			// Get all pages of large resultset using iterator.HasMoreResults
-			Console.WriteLine("Querying for all documents (full resultset, stateful)");
+			WriteLine("Querying for all documents (full resultset, stateful)");
 			iterator = container.GetItemQueryIterator<Customer>(sql);
 			itemCount = 0;
 			var pageCount = 0;
@@ -176,17 +179,17 @@ namespace CosmosDb.ClientDemos.Demos
 				documents = await iterator.ReadNextAsync();
 				foreach (var customer in documents)
 				{
-					Console.WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+					WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
 				}
 			}
-			Console.WriteLine($"Retrieved {itemCount} documents (full resultset, stateful)");
-			Console.WriteLine();
+			WriteLine($"Retrieved {itemCount} documents (full resultset, stateful)");
+			WriteLine();
 		}
 
 		private static async Task QueryWithStatelessPaging()
 		{
 			// Get all pages of large resultset using continuation token
-			Console.WriteLine("Querying for all documents (full resultset, stateless)");
+			WriteLine("Querying for all documents (full resultset, stateless)");
 
 			var continuationToken = default(string);
 			do
@@ -194,8 +197,8 @@ namespace CosmosDb.ClientDemos.Demos
 				continuationToken = await QueryFetchNextPage(continuationToken);
 			} while (continuationToken != null);
 
-			Console.WriteLine("Retrieved all documents (full resultset, stateless)");
-			Console.WriteLine();
+			WriteLine("Retrieved all documents (full resultset, stateless)");
+			WriteLine();
 		}
 
 		private static async Task<string> QueryFetchNextPage(string continuationToken)
@@ -203,25 +206,25 @@ namespace CosmosDb.ClientDemos.Demos
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			const string sql = "SELECT * FROM c";
 
-			var iterator = container.GetItemQueryIterator<Customer>(sql, continuationToken);
-			var page = await iterator.ReadNextAsync();
+			FeedIterator<Customer> iterator = container.GetItemQueryIterator<Customer>(sql, continuationToken);
+			FeedResponse<Customer> page = await iterator.ReadNextAsync();
 			var itemCount = 0;
 
 			if (continuationToken != null)
 			{
-				Console.WriteLine($"... resuming with continuation {continuationToken}");
+				WriteLine($"... resuming with continuation {continuationToken}");
 			}
 
 			foreach (var customer in page)
 			{
-				Console.WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+				WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
 			}
 
 			continuationToken = page.ContinuationToken;
 
 			if (continuationToken == null)
 			{
-				Console.WriteLine("... no more continuation; resultset complete");
+				WriteLine("... no more continuation; resultset complete");
 			}
 
 			return continuationToken;
@@ -229,15 +232,15 @@ namespace CosmosDb.ClientDemos.Demos
 
         private static async Task QueryWithStatefulPagingStreamed()
         {
-			Console.Clear();
-			Console.WriteLine(">>> Query Documents with Streaming <<<");
-            Console.WriteLine();
+			Clear();
+			WriteLine(">>> Query Documents with Streaming <<<");
+            WriteLine();
 
             var container = Shared.Client.GetContainer("mydb", "mystore");
             const string sql = "SELECT * FROM c";
 
             // Get all pages of large resultset using iterator.HasMoreResults
-            Console.WriteLine("Querying for all documents (full resultset, stateful, w/streaming iterator)");
+            WriteLine("Querying for all documents (full resultset, stateful, w/streaming iterator)");
             var streamIterator = container.GetItemQueryStreamIterator(sql);
             var itemCount = 0;
             var pageCount = 0;
@@ -255,19 +258,19 @@ namespace CosmosDb.ClientDemos.Demos
                     foreach (var item in jarr)
                     {
                         var customer = JsonConvert.DeserializeObject<Customer>(item.ToString());
-                        Console.WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+                        WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
                     }
                 }
             }
 
-            Console.WriteLine($"Retrieved {itemCount} documents (full resultset, stateful, w/streaming iterator");
-            Console.WriteLine();
+            WriteLine($"Retrieved {itemCount} documents (full resultset, stateful, w/streaming iterator");
+            WriteLine();
         }
 
         private static async Task QueryWithStatelessPagingStreamed()
         {
             // Get all pages of large resultset using continuation token
-            Console.WriteLine("Querying for all documents (full resultset, stateless, w/streaming iterator)");
+            WriteLine("Querying for all documents (full resultset, stateless, w/streaming iterator)");
 
             var continuationToken = default(string);
             do
@@ -275,8 +278,8 @@ namespace CosmosDb.ClientDemos.Demos
                 continuationToken = await QueryFetchNextPageStreamed(continuationToken);
             } while (continuationToken != null);
 
-            Console.WriteLine("Retrieved all documents (full resultset, stateless, w/streaming iterator)");
-            Console.WriteLine();
+            WriteLine("Retrieved all documents (full resultset, stateless, w/streaming iterator)");
+            WriteLine();
         }
 
         private static async Task<string> QueryFetchNextPageStreamed(string continuationToken)
@@ -291,7 +294,7 @@ namespace CosmosDb.ClientDemos.Demos
 
             if (continuationToken != null)
             {
-                Console.WriteLine($"... resuming with continuation {continuationToken}");
+                WriteLine($"... resuming with continuation {continuationToken}");
             }
 
             var stream = response.Content;
@@ -300,10 +303,11 @@ namespace CosmosDb.ClientDemos.Demos
                 var json = await sr.ReadToEndAsync();
                 var jobj = JsonConvert.DeserializeObject<JObject>(json);
                 var jarr = (JArray)jobj["Documents"];
+
                 foreach (var item in jarr)
                 {
                     var customer = JsonConvert.DeserializeObject<Customer>(item.ToString());
-                    Console.WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+                    WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
                 }
             }
 
@@ -311,7 +315,7 @@ namespace CosmosDb.ClientDemos.Demos
 
             if (continuationToken == null)
             {
-                Console.WriteLine("... no more continuation; resultset complete");
+                WriteLine("... no more continuation; resultset complete");
             }
 
             return continuationToken;
@@ -319,11 +323,11 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static void QueryWithLinq()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Query Documents (LINQ) <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Query Documents (LINQ) <<<");
+			WriteLine();
 
-			Console.WriteLine("Querying for UK customers (LINQ)");
+			WriteLine("Querying for UK customers (LINQ)");
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
 			var q = from d in container.GetItemLinqQueryable<Customer>(allowSynchronousQueryExecution: true)
@@ -337,64 +341,64 @@ namespace CosmosDb.ClientDemos.Demos
 
 			var documents = q.ToList();
 
-			Console.WriteLine($"Found {documents.Count} UK customers");
+			WriteLine($"Found {documents.Count} UK customers");
 
 			foreach (var document in documents)
 			{
-				var d = document as dynamic;
-				Console.WriteLine($" Id: {d.Id}; Name: {d.Name}; City: {d.City}");
+				dynamic d = document;
+				WriteLine($" Id: {d.Id}; Name: {d.Name}; City: {d.City}");
 			}
 
-			Console.WriteLine();
+			WriteLine();
 		}
 
 		private static async Task ReplaceDocuments()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Replace Documents <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Replace Documents <<<");
+			WriteLine();
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
-			Console.WriteLine("Querying for documents with 'isNew' flag");
+			WriteLine("Querying for documents with 'isNew' flag");
 			var sql = "SELECT VALUE COUNT(c) FROM c WHERE c.isNew = true";
 			var count = (await (container.GetItemQueryIterator<int>(sql)).ReadNextAsync()).First();
-			Console.WriteLine($"Documents with 'isNew' flag: {count}");
-			Console.WriteLine();
+			WriteLine($"Documents with 'isNew' flag: {count}");
+			WriteLine();
 
-			Console.WriteLine("Querying for documents to be updated");
+			WriteLine("Querying for documents to be updated");
 			sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
-			var documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
-			Console.WriteLine($"Found {documents.Count} documents to be updated");
+			List<dynamic> documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			WriteLine($"Found {documents.Count} documents to be updated");
 			foreach (var document in documents)
 			{
 				document.isNew = true;
 				var result = await container.ReplaceItemAsync<dynamic>(document, (string)document.id);
 				var updatedDocument = result.Resource;
-				Console.WriteLine($"Updated document 'isNew' flag: {updatedDocument.isNew}");
+				WriteLine($"Updated document 'isNew' flag: {updatedDocument.isNew}");
 			}
-			Console.WriteLine();
+			WriteLine();
 
-			Console.WriteLine("Querying for documents with 'isNew' flag");
+			WriteLine("Querying for documents with 'isNew' flag");
 			sql = "SELECT VALUE COUNT(c) FROM c WHERE c.isNew = true";
 			count = (await (container.GetItemQueryIterator<int>(sql)).ReadNextAsync()).First();
-			Console.WriteLine($"Documents with 'isNew' flag: {count}");
-			Console.WriteLine();
+			WriteLine($"Documents with 'isNew' flag: {count}");
+			WriteLine();
 		}
 
 		private static async Task DeleteDocuments()
 		{
-			Console.Clear();
-			Console.WriteLine(">>> Delete Documents <<<");
-			Console.WriteLine();
+			Clear();
+			WriteLine(">>> Delete Documents <<<");
+			WriteLine();
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
-			Console.WriteLine("Querying for documents to be deleted");
+			WriteLine("Querying for documents to be deleted");
 			const string sql = "SELECT c.id, c.address.postalCode FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
-			var iterator = container.GetItemQueryIterator<dynamic>(sql);
-			var documents = (await iterator.ReadNextAsync()).ToList();
-			Console.WriteLine($"Found {documents.Count} documents to be deleted");
+			FeedIterator<dynamic> iterator = container.GetItemQueryIterator<dynamic>(sql);
+			List<dynamic> documents = (await iterator.ReadNextAsync()).ToList();
+			WriteLine($"Found {documents.Count} documents to be deleted");
 
 			foreach (var document in documents)
 			{
@@ -403,8 +407,8 @@ namespace CosmosDb.ClientDemos.Demos
 				await container.DeleteItemAsync<dynamic>(id, new PartitionKey(pk));
 			}
 
-			Console.WriteLine($"Deleted {documents.Count} new customer documents");
-			Console.WriteLine();
+			WriteLine($"Deleted {documents.Count} new customer documents");
+			WriteLine();
 		}
     }
 }

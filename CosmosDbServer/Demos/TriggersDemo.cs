@@ -67,8 +67,8 @@ namespace CosmosDb.ServerSide.Demos
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
-			var iterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
-			var triggers = await iterator.ReadNextAsync();
+			FeedIterator<TriggerProperties> iterator = container.Scripts.GetTriggerQueryIterator<TriggerProperties>();
+			FeedResponse<TriggerProperties> triggers = await iterator.ReadNextAsync();
 
 			var count = 0;
 			foreach (var trigger in triggers)
@@ -162,7 +162,7 @@ namespace CosmosDb.ServerSide.Demos
 			await ViewMetaDocs();
 
 			// Create a bunch of documents across two partition keys
-			var docs = new List<dynamic>
+			List<dynamic> docs = new List<dynamic>
 			{
 				// 11229
 				new { id = "11229a", address = new { postalCode = "11229" }, name = "New Customer ABCD" },
@@ -198,7 +198,8 @@ namespace CosmosDb.ServerSide.Demos
 				WHERE c.address.postalCode IN('11229', '11235')
 			";
 
-			var documentIds = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
+			FeedResponse<dynamic> documentIds = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
+
 			foreach (var documentKey in documentIds)
 			{
                 var id = documentKey.id.Value;
@@ -213,7 +214,7 @@ namespace CosmosDb.ServerSide.Demos
 			const string sql = @"SELECT * FROM c WHERE c.isMetaDoc";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			var metaDocs = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			List<dynamic> metaDocs = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
 
 			Console.WriteLine();
 			Console.WriteLine($" Found {metaDocs.Count} metadata documents:");

@@ -1,7 +1,8 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+
+using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
@@ -24,8 +25,8 @@ namespace CosmosDb.ClientDemos.Demos
 
 		private static async Task ViewContainers()
 		{
-			Console.WriteLine();
-			Console.WriteLine(">>> View Containers in mydb <<<");
+			WriteLine();
+			WriteLine(">>> View Containers in mydb <<<");
 
 			var database = Shared.Client.GetDatabase("mydb");
 			FeedIterator<ContainerProperties> iterator = database.GetContainerQueryIterator<ContainerProperties>();
@@ -35,25 +36,25 @@ namespace CosmosDb.ClientDemos.Demos
 			foreach (var container in containers)
 			{
 				count++;
-				Console.WriteLine();
-				Console.WriteLine($" Container #{count}");
+				WriteLine();
+				WriteLine($" Container #{count}");
 				await ViewContainer(container);
 			}
 
-			Console.WriteLine();
-			Console.WriteLine($"Total containers in mydb database: {count}");
+			WriteLine();
+			WriteLine($"Total containers in mydb database: {count}");
 		}
 
 		private static async Task ViewContainer(ContainerProperties containerProperties)
 		{
-			Console.WriteLine($"     Container ID: {containerProperties.Id}");
-			Console.WriteLine($"    Last Modified: {containerProperties.LastModified}");
-			Console.WriteLine($"    Partition Key: {containerProperties.PartitionKeyPath}");
+			WriteLine($"     Container ID: {containerProperties.Id}");
+			WriteLine($"    Last Modified: {containerProperties.LastModified}");
+			WriteLine($"    Partition Key: {containerProperties.PartitionKeyPath}");
 
 			var container = Shared.Client.GetContainer("mydb", containerProperties.Id);
-			var throughput = await container.ReadThroughputAsync();
+			int? throughput = await container.ReadThroughputAsync();
 
-			Console.WriteLine($"       Throughput: {throughput}");
+			WriteLine($"       Throughput: {throughput}");
 		}
 
 		private static async Task CreateContainer(
@@ -61,12 +62,12 @@ namespace CosmosDb.ClientDemos.Demos
 			int throughput = 400,
 			string partitionKey = "/partitionKey")
 		{
-			Console.WriteLine();
-			Console.WriteLine($">>> Create Container {containerId} in mydb <<<");
-			Console.WriteLine();
-			Console.WriteLine($" Throughput: {throughput} RU/sec");
-			Console.WriteLine($" Partition key: {partitionKey}");
-			Console.WriteLine();
+			WriteLine();
+			WriteLine($">>> Create Container {containerId} in mydb <<<");
+			WriteLine();
+			WriteLine($" Throughput: {throughput} RU/sec");
+			WriteLine($" Partition key: {partitionKey}");
+			WriteLine();
 
 			var containerDef = new ContainerProperties
 			{
@@ -78,19 +79,19 @@ namespace CosmosDb.ClientDemos.Demos
 			var result = await database.CreateContainerAsync(containerDef, throughput);
 			var container = result.Resource;
 
-			Console.WriteLine("Created new container");
+			WriteLine("Created new container");
 			await ViewContainer(container);	// Intermittent failures!
 		}
 
 		private static async Task DeleteContainer(string containerId)
 		{
-			Console.WriteLine();
-			Console.WriteLine($">>> Delete Container {containerId} in mydb <<<");
+			WriteLine();
+			WriteLine($">>> Delete Container {containerId} in mydb <<<");
 
 			var container = Shared.Client.GetContainer("mydb", containerId);
 			await container.DeleteContainerAsync();
 
-			Console.WriteLine($"Deleted container {containerId} from database mydb");
+			WriteLine($"Deleted container {containerId} from database mydb");
 		}
 
 	}
