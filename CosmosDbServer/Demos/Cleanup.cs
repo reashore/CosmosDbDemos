@@ -23,7 +23,7 @@ namespace CosmosDb.ServerSide.Demos
 			{
 				// Delete documents created by demos
 				Console.WriteLine("Deleting documents created by demos...");
-				var sql = @"
+				const string sql = @"
 					SELECT c.id, c.address.postalCode
 					FROM c
 					WHERE

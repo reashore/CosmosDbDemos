@@ -5,7 +5,7 @@ namespace CosmosDb.ClientDemos.Demos
 {
 	public static class Shared
 	{
-		public static CosmosClient Client { get; private set; }
+		public static CosmosClient Client { get; }
 
 		static Shared()
 		{

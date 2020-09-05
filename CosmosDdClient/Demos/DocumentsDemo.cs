@@ -11,7 +11,7 @@ namespace CosmosDb.ClientDemos.Demos
 {
 	public static class DocumentsDemo
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Debugger.Break();
 
@@ -32,7 +32,7 @@ namespace CosmosDb.ClientDemos.Demos
 			await DeleteDocuments();
 		}
 
-		private async static Task CreateDocuments()
+		private static async Task CreateDocuments()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Create Documents <<<");
@@ -112,7 +112,7 @@ namespace CosmosDb.ClientDemos.Demos
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
 			Console.WriteLine("Querying for new customer documents (SQL)");
-			var sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
+			const string sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
 
 			// Query for dynamic objects
 			var iterator1 = container.GetItemQueryIterator<dynamic>(sql);
@@ -144,14 +144,14 @@ namespace CosmosDb.ClientDemos.Demos
 			// You only get back the first "page" (up to MaxItemCount)
 		}
 
-        private async static Task QueryWithStatefulPaging()
+        private static async Task QueryWithStatefulPaging()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Query Documents (paged results, stateful) <<<");
 			Console.WriteLine();
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			var sql = "SELECT * FROM c";
+			const string sql = "SELECT * FROM c";
 
 			// Get first page of large resultset
 			Console.WriteLine("Querying for all documents (first page)");
@@ -183,7 +183,7 @@ namespace CosmosDb.ClientDemos.Demos
 			Console.WriteLine();
 		}
 
-		private async static Task QueryWithStatelessPaging()
+		private static async Task QueryWithStatelessPaging()
 		{
 			// Get all pages of large resultset using continuation token
 			Console.WriteLine("Querying for all documents (full resultset, stateless)");
@@ -194,14 +194,14 @@ namespace CosmosDb.ClientDemos.Demos
 				continuationToken = await QueryFetchNextPage(continuationToken);
 			} while (continuationToken != null);
 
-			Console.WriteLine($"Retrieved all documents (full resultset, stateless)");
+			Console.WriteLine("Retrieved all documents (full resultset, stateless)");
 			Console.WriteLine();
 		}
 
-		private async static Task<string> QueryFetchNextPage(string continuationToken)
+		private static async Task<string> QueryFetchNextPage(string continuationToken)
 		{
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			var sql = "SELECT * FROM c";
+			const string sql = "SELECT * FROM c";
 
 			var iterator = container.GetItemQueryIterator<Customer>(sql, continuationToken);
 			var page = await iterator.ReadNextAsync();
@@ -221,20 +221,20 @@ namespace CosmosDb.ClientDemos.Demos
 
 			if (continuationToken == null)
 			{
-				Console.WriteLine($"... no more continuation; resultset complete");
+				Console.WriteLine("... no more continuation; resultset complete");
 			}
 
 			return continuationToken;
 		}
 
-        private async static Task QueryWithStatefulPagingStreamed()
+        private static async Task QueryWithStatefulPagingStreamed()
         {
 			Console.Clear();
 			Console.WriteLine(">>> Query Documents with Streaming <<<");
             Console.WriteLine();
 
             var container = Shared.Client.GetContainer("mydb", "mystore");
-            var sql = "SELECT * FROM c";
+            const string sql = "SELECT * FROM c";
 
             // Get all pages of large resultset using iterator.HasMoreResults
             Console.WriteLine("Querying for all documents (full resultset, stateful, w/streaming iterator)");
@@ -246,6 +246,7 @@ namespace CosmosDb.ClientDemos.Demos
                 pageCount++;
                 var results = await streamIterator.ReadNextAsync();
                 var stream = results.Content;
+
                 using (var sr = new StreamReader(stream))
                 {
                     var json = await sr.ReadToEndAsync();
@@ -258,11 +259,12 @@ namespace CosmosDb.ClientDemos.Demos
                     }
                 }
             }
+
             Console.WriteLine($"Retrieved {itemCount} documents (full resultset, stateful, w/streaming iterator");
             Console.WriteLine();
         }
 
-        private async static Task QueryWithStatelessPagingStreamed()
+        private static async Task QueryWithStatelessPagingStreamed()
         {
             // Get all pages of large resultset using continuation token
             Console.WriteLine("Querying for all documents (full resultset, stateless, w/streaming iterator)");
@@ -273,14 +275,14 @@ namespace CosmosDb.ClientDemos.Demos
                 continuationToken = await QueryFetchNextPageStreamed(continuationToken);
             } while (continuationToken != null);
 
-            Console.WriteLine($"Retrieved all documents (full resultset, stateless, w/streaming iterator)");
+            Console.WriteLine("Retrieved all documents (full resultset, stateless, w/streaming iterator)");
             Console.WriteLine();
         }
 
-        private async static Task<string> QueryFetchNextPageStreamed(string continuationToken)
+        private static async Task<string> QueryFetchNextPageStreamed(string continuationToken)
         {
             var container = Shared.Client.GetContainer("mydb", "mystore");
-            var sql = "SELECT * FROM c";
+            const string sql = "SELECT * FROM c";
 
             var streamIterator = container.GetItemQueryStreamIterator(sql, continuationToken);
             var response = await streamIterator.ReadNextAsync();
@@ -336,15 +338,17 @@ namespace CosmosDb.ClientDemos.Demos
 			var documents = q.ToList();
 
 			Console.WriteLine($"Found {documents.Count} UK customers");
+
 			foreach (var document in documents)
 			{
 				var d = document as dynamic;
 				Console.WriteLine($" Id: {d.Id}; Name: {d.Name}; City: {d.City}");
 			}
+
 			Console.WriteLine();
 		}
 
-		private async static Task ReplaceDocuments()
+		private static async Task ReplaceDocuments()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Replace Documents <<<");
@@ -378,7 +382,7 @@ namespace CosmosDb.ClientDemos.Demos
 			Console.WriteLine();
 		}
 
-		private async static Task DeleteDocuments()
+		private static async Task DeleteDocuments()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Delete Documents <<<");
@@ -387,19 +391,20 @@ namespace CosmosDb.ClientDemos.Demos
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
 			Console.WriteLine("Querying for documents to be deleted");
-			var sql = "SELECT c.id, c.address.postalCode FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
+			const string sql = "SELECT c.id, c.address.postalCode FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
 			var iterator = container.GetItemQueryIterator<dynamic>(sql);
 			var documents = (await iterator.ReadNextAsync()).ToList();
 			Console.WriteLine($"Found {documents.Count} documents to be deleted");
+
 			foreach (var document in documents)
 			{
 				string id = document.id;
 				string pk = document.postalCode;
 				await container.DeleteItemAsync<dynamic>(id, new PartitionKey(pk));
 			}
+
 			Console.WriteLine($"Deleted {documents.Count} new customer documents");
 			Console.WriteLine();
 		}
-
-	}
+    }
 }

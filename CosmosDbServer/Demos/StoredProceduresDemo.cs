@@ -11,7 +11,7 @@ namespace CosmosDb.ServerSide.Demos
 {
 	public static class StoredProceduresDemo
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Debugger.Break();
 
@@ -26,7 +26,7 @@ namespace CosmosDb.ServerSide.Demos
 
 		// Create stored procedures
 
-		private async static Task CreateStoredProcedures()
+		private static async Task CreateStoredProcedures()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> Create Stored Procedures <<<");
@@ -39,9 +39,9 @@ namespace CosmosDb.ServerSide.Demos
 			await CreateStoredProcedure("spBulkDelete");
 		}
 
-		private async static Task CreateStoredProcedure(string sprocId)
+		private static async Task CreateStoredProcedure(string sprocId)
 		{
-			var sprocBody = File.ReadAllText($@"Server\{sprocId}.js");
+			var sprocBody = await File.ReadAllTextAsync($@"Server\{sprocId}.js");
 
 			var sprocProps = new StoredProcedureProperties
 			{
@@ -80,7 +80,7 @@ namespace CosmosDb.ServerSide.Demos
 
 		// Execute stored procedures
 
-		private async static Task ExecuteStoredProcedures()
+		private static async Task ExecuteStoredProcedures()
 		{
 			Console.Clear();
 			await Execute_spHelloWorld();
@@ -100,7 +100,7 @@ namespace CosmosDb.ServerSide.Demos
 			await Execute_spBulkDelete();
 		}
 
-		private async static Task Execute_spHelloWorld()
+		private static async Task Execute_spHelloWorld()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spHelloWorld stored procedure");
@@ -113,7 +113,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine($"Result: {message}");
 		}
 
-		private async static Task Execute_spSetNorthAmerica1()
+		private static async Task Execute_spSetNorthAmerica1()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spSetNorthAmerica (country = United States)");
@@ -137,16 +137,16 @@ namespace CosmosDb.ServerSide.Demos
 			var document = result.Resource;
 
 			var country = document.address.countryRegionName;
-			var isNA = document.address.isNorthAmerica;
+			var isNorthAmerica = document.address.isNorthAmerica;
 
 			Console.WriteLine("Result:");
 			Console.WriteLine($" Country = {country}");
-			Console.WriteLine($" Is North America = {isNA}");
+			Console.WriteLine($" Is North America = {isNorthAmerica}");
 
 			await container.DeleteItemAsync<dynamic>(id, pk);
 		}
 
-		private async static Task Execute_spSetNorthAmerica2()
+		private static async Task Execute_spSetNorthAmerica2()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spSetNorthAmerica (country = United Kingdom)");
@@ -173,16 +173,16 @@ namespace CosmosDb.ServerSide.Demos
 			var documentObject = JsonConvert.DeserializeObject(document.ToString());
 
 			var country = documentObject["address"]["countryRegionName"];
-			var isNA = documentObject["address"]["isNorthAmerica"];
+			var isNorthAmerica = documentObject["address"]["isNorthAmerica"];
 
 			Console.WriteLine("Result:");
 			Console.WriteLine($" Country = {country}");
-			Console.WriteLine($" Is North America = {isNA}");
+			Console.WriteLine($" Is North America = {isNorthAmerica}");
 
 			await container.DeleteItemAsync<dynamic>(id, pk);
 		}
 
-		private async static Task Execute_spSetNorthAmerica3()
+		private static async Task Execute_spSetNorthAmerica3()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spSetNorthAmerica (no country)");
@@ -212,7 +212,7 @@ namespace CosmosDb.ServerSide.Demos
 			}
 		}
 
-		private async static Task Execute_spGenerateId()
+		private static async Task Execute_spGenerateId()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spGenerateId");
@@ -248,13 +248,13 @@ namespace CosmosDb.ServerSide.Demos
 			await container.DeleteItemAsync<dynamic>(doc4.id.ToString(), pk54321);
 		}
 
-		private async static Task Execute_spBulkInsert()
+		private static async Task Execute_spBulkInsert()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spBulkInsert");
 
 			var docs = new List<dynamic>();
-			var total = 5000;
+			const int total = 5000;
 			for (var i = 1; i <= total; i++)
 			{
 				dynamic doc = new
@@ -283,20 +283,20 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine();
 		}
 
-		private async static Task Execute_spBulkDelete()
+		private static async Task Execute_spBulkDelete()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Execute spBulkDelete");
 
 			// query retrieves self-links for documents to bulk-delete
-			var whereClause = "STARTSWITH(c.name, 'Bulk inserted doc ') = true";
+			const string whereClause = "STARTSWITH(c.name, 'Bulk inserted doc ') = true";
 			var count = await Execute_spBulkDelete(whereClause);
 
 			Console.WriteLine($"Deleted bulk inserted documents; count: {count}");
 			Console.WriteLine();
 		}
 
-		private async static Task<int> Execute_spBulkDelete(string sql)
+		private static async Task<int> Execute_spBulkDelete(string sql)
 		{
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var pk = new PartitionKey("12345");
@@ -318,7 +318,7 @@ namespace CosmosDb.ServerSide.Demos
 
 		// Delete stored procedures
 
-		private async static Task DeleteStoredProcedures()
+		private static async Task DeleteStoredProcedures()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> Delete Stored Procedures <<<");
@@ -331,7 +331,7 @@ namespace CosmosDb.ServerSide.Demos
 			await DeleteStoredProcedure("spBulkDelete");
 		}
 
-		private async static Task DeleteStoredProcedure(string sprocId)
+		private static async Task DeleteStoredProcedure(string sprocId)
 		{
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			await container.Scripts.DeleteStoredProcedureAsync(sprocId);

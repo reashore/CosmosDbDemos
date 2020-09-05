@@ -7,11 +7,11 @@ namespace CosmosDb.ClientDemos
 {
 	public static class Program
 	{
-		private static IDictionary<string, Func<Task>> DemoMethods;
+		private static IDictionary<string, Func<Task>> _demoMethods;
 
 		private static void Main(string[] args)
 		{
-			DemoMethods = new Dictionary<string, Func<Task>>
+			_demoMethods = new Dictionary<string, Func<Task>>
 			{
 				{ "DB", DatabasesDemo.Run },
 				{ "CO", ContainersDemo.Run },
@@ -28,9 +28,9 @@ namespace CosmosDb.ClientDemos
 					Console.Write("Selection: ");
 					var input = Console.ReadLine();
 					var demoId = input.ToUpper().Trim();
-					if (DemoMethods.Keys.Contains(demoId))
+					if (_demoMethods.Keys.Contains(demoId))
 					{
-						var demoMethod = DemoMethods[demoId];
+						var demoMethod = _demoMethods[demoId];
 						await RunDemo(demoMethod);
 					}
 					else if (demoId == "Q")

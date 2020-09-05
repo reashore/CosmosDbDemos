@@ -9,7 +9,7 @@ namespace CosmosDb.ServerSide.Demos
 {
 	public static class UserDefinedFunctionsDemo
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Debugger.Break();
 
@@ -24,7 +24,7 @@ namespace CosmosDb.ServerSide.Demos
 			await DeleteUserDefinedFunctions();
 		}
 
-		private async static Task CreateUserDefinedFunctions()
+		private static async Task CreateUserDefinedFunctions()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> Create User Defined Functions <<<");
@@ -35,9 +35,9 @@ namespace CosmosDb.ServerSide.Demos
 			await CreateUserDefinedFunction("udfFormatCityStateZip");
 		}
 
-		private async static Task CreateUserDefinedFunction(string udfId)
+		private static async Task CreateUserDefinedFunction(string udfId)
 		{
-			var udfBody = File.ReadAllText($@"Server\{udfId}.js");
+			var udfBody = await File.ReadAllTextAsync($@"Server\{udfId}.js");
 			var udfProps = new UserDefinedFunctionProperties
 			{
 				Id = udfId,
@@ -49,7 +49,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine($"Created user defined function  {udfId} ({result.RequestCharge} RUs);");
 		}
 
-		private async static Task ViewUserDefinedFunctions()
+		private static async Task ViewUserDefinedFunctions()
 		{
 			Console.Clear();
 			Console.WriteLine(">>> View UDFs <<<");
@@ -71,12 +71,12 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine($"Total UDFs: {count}");
 		}
 
-		private async static Task Execute_udfRegEx()
+		private static async Task Execute_udfRegEx()
 		{
 			Console.Clear();
 			Console.WriteLine("Querying for Rental customers");
 
-			var sql = "SELECT c.id, c.name FROM c WHERE udf.udfRegEx(c.name, 'Rental') != null";
+			const string sql = "SELECT c.id, c.name FROM c WHERE udf.udfRegEx(c.name, 'Rental') != null";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
@@ -88,7 +88,7 @@ namespace CosmosDb.ServerSide.Demos
 			}
 		}
 
-		private async static Task Execute_udfIsNorthAmerica()
+		private static async Task Execute_udfIsNorthAmerica()
 		{
 			Console.Clear();
 			Console.WriteLine("Querying for North American customers");
@@ -124,12 +124,12 @@ namespace CosmosDb.ServerSide.Demos
 			}
 		}
 
-		private async static Task Execute_udfFormatCityStateZip()
+		private static async Task Execute_udfFormatCityStateZip()
 		{
 			Console.WriteLine();
 			Console.WriteLine("Listing names with city, state, zip (first 20)");
 
-			var sql = "SELECT c.name, udf.udfFormatCityStateZip(c) AS csz FROM c";
+			const string sql = "SELECT c.name, udf.udfFormatCityStateZip(c) AS csz FROM c";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
@@ -139,7 +139,7 @@ namespace CosmosDb.ServerSide.Demos
 			}
 		}
 
-		private async static Task DeleteUserDefinedFunctions()
+		private static async Task DeleteUserDefinedFunctions()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> Delete User Defined Functions <<<");
@@ -150,7 +150,7 @@ namespace CosmosDb.ServerSide.Demos
 			await DeleteUserDefinedFunction("udfFormatCityStateZip");
 		}
 
-		private async static Task DeleteUserDefinedFunction(string udfId)
+		private static async Task DeleteUserDefinedFunction(string udfId)
 		{
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			await container.Scripts.DeleteUserDefinedFunctionAsync(udfId);

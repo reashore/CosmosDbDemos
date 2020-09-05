@@ -11,7 +11,7 @@ namespace CosmosDb.ServerSide.Demos
 {
     public static class TriggersDemo
 	{
-		public async static Task Run()
+		public static async Task Run()
 		{
 			Debugger.Break();
 
@@ -25,22 +25,22 @@ namespace CosmosDb.ServerSide.Demos
 			await DeleteTriggers();
 		}
 
-		private async static Task CreateTriggers()
+		private static async Task CreateTriggers()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> Create Triggers <<<");
 			Console.WriteLine();
 
 			// Create pre-trigger
-			var trgValidateDocument = File.ReadAllText(@"Server\trgValidateDocument.js");
+			var trgValidateDocument = await File.ReadAllTextAsync(@"Server\trgValidateDocument.js");
 			await CreateTrigger("trgValidateDocument", trgValidateDocument, TriggerType.Pre, TriggerOperation.All);
 
 			// Create post-trigger
-			var trgUpdateMetadata = File.ReadAllText(@"Server\trgUpdateMetadata.js");
+			var trgUpdateMetadata = await File.ReadAllTextAsync(@"Server\trgUpdateMetadata.js");
 			await CreateTrigger("trgUpdateMetadata", trgUpdateMetadata, TriggerType.Post, TriggerOperation.Create);
 		}
 
-		private async static Task CreateTrigger(
+		private static async Task CreateTrigger(
 			string triggerId,
 			string triggerBody,
 			TriggerType triggerType,
@@ -59,7 +59,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine($"Created trigger {triggerId}; ({result.RequestCharge} RUs)");
 		}
 
-		private async static Task ViewTriggers()
+		private static async Task ViewTriggers()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> View Triggers <<<");
@@ -98,7 +98,7 @@ namespace CosmosDb.ServerSide.Demos
 			await container.DeleteItemAsync<dynamic>(doc2Id, pk);
 		}
 
-		private async static Task<string> CreateDocumentWithValidation(string weekdayOff)
+		private static async Task<string> CreateDocumentWithValidation(string weekdayOff)
 		{
 			dynamic document = new
 			{
@@ -134,7 +134,7 @@ namespace CosmosDb.ServerSide.Demos
 			}
 		}
 
-		private async static Task UpdateDocumentWithValidation(string documentId, string weekdayOff)
+		private static async Task UpdateDocumentWithValidation(string documentId, string weekdayOff)
 		{
 			var sql = $"SELECT * FROM c WHERE c.id = '{documentId}'";
 			var container = Shared.Client.GetContainer("mydb", "mystore");
@@ -154,7 +154,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine();
 		}
 
-		private async static Task Execute_trgUpdateMetadata()
+		private static async Task Execute_trgUpdateMetadata()
 		{
 			Console.Clear();
 
@@ -192,7 +192,7 @@ namespace CosmosDb.ServerSide.Demos
 			await ViewMetaDocs();
 
 			// Cleanup
-			var sql = @"
+			const string sql = @"
 				SELECT c.id, c.address.postalCode
 				FROM c
 				WHERE c.address.postalCode IN('11229', '11235')
@@ -210,7 +210,7 @@ namespace CosmosDb.ServerSide.Demos
 
 		private static async Task ViewMetaDocs()
 		{
-			var sql = @"SELECT * FROM c WHERE c.isMetaDoc";
+			const string sql = @"SELECT * FROM c WHERE c.isMetaDoc";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var metaDocs = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
@@ -228,7 +228,7 @@ namespace CosmosDb.ServerSide.Demos
 			}
 		}
 
-		private async static Task DeleteTriggers()
+		private static async Task DeleteTriggers()
 		{
 			Console.WriteLine();
 			Console.WriteLine(">>> Delete Triggers <<<");
@@ -238,7 +238,7 @@ namespace CosmosDb.ServerSide.Demos
 			await DeleteTrigger("trgUpdateMetadata");
 		}
 
-		private async static Task DeleteTrigger(string triggerId)
+		private static async Task DeleteTrigger(string triggerId)
 		{
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			await container.Scripts.DeleteTriggerAsync(triggerId);

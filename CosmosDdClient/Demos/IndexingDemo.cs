@@ -117,7 +117,7 @@ namespace CosmosDb.ClientDemos.Demos
 			Console.WriteLine(">>> Composite Indexes <<<");
 			Console.WriteLine();
 
-			var sql = @"
+			const string sql = @"
 				SELECT TOP 20 *
 				FROM c
 				WHERE c.address.countryRegionName = 'United States'
