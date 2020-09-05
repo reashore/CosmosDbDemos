@@ -26,7 +26,14 @@ namespace CosmosDb.ServerSide
                 {
                     Console.Write("Selection: ");
                     var input = Console.ReadLine();
+
+                    if (input == null)
+                    {
+                        continue;
+                    }
+
                     var demoId = input.ToUpper().Trim();
+
                     if (_demoMethods.Keys.Contains(demoId))
                     {
                         Func<Task> demoMethod = _demoMethods[demoId];

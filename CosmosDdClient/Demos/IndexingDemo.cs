@@ -107,7 +107,6 @@ namespace CosmosDb.ClientDemos.Demos
 				Console.WriteLine(exception.Message);
 			}
 
-			// Delete the container
 			await container.DeleteContainerAsync();
 		}
 
@@ -237,6 +236,5 @@ namespace CosmosDb.ClientDemos.Demos
 			// Delete the container
 			await container.DeleteContainerAsync();
 		}
-
-	}
+    }
 }
