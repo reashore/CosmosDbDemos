@@ -6,12 +6,17 @@ using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
-	public static class ContainersDemo
-	{
-		public static async Task Run()
+	public class ContainersDemo
+    {
+        private readonly string _databaseName;
+
+        public ContainersDemo(string databaseName)
+        {
+            _databaseName = databaseName;
+        }
+
+		public async Task Run()
 		{
-			// todo create instance variable
-            const string databaseName = "Database1";
             const string container1Id = "Container1";
             const string container2Id = "Container2";
             const string partitionKey = "/state";
@@ -19,30 +24,30 @@ namespace CosmosDb.ClientDemos.Demos
 
             Debugger.Break();
 
-			await DatabasesDemo.CreateDatabase(databaseName);
+			await DatabasesDemo.CreateDatabase(_databaseName);
+            await ViewContainers();
 
-			await ViewContainers(databaseName);
+            await CreateContainer(_databaseName, container1Id, throughput, partitionKey);
+            await ViewContainers();
+			await CreateContainer(_databaseName, container2Id, throughput, partitionKey);
+			await ViewContainers();
 
-            await CreateContainer(databaseName, container1Id, throughput, partitionKey);
-			await CreateContainer(databaseName, container2Id, throughput, partitionKey);
-			await ViewContainers(databaseName);
-
-			await DeleteContainer(databaseName, container1Id);
-			await DeleteContainer(databaseName, container2Id);
-			await ViewContainers(databaseName);
+			await DeleteContainer(container1Id);
+			await DeleteContainer(container2Id);
+			await ViewContainers();
 		}
 
-		private static async Task ViewContainers(string databaseName)
+		private async Task ViewContainers()
 		{
-			WriteLine($"\n>>> View Containers in {databaseName} <<<");
+			WriteLine($"\n>>> View Containers in {_databaseName} <<<");
 
-			var database = Shared.Client.GetDatabase(databaseName);
+			var database = Shared.Client.GetDatabase(_databaseName);
 			FeedIterator<ContainerProperties> iterator = database.GetContainerQueryIterator<ContainerProperties>();
 			FeedResponse<ContainerProperties> containers = await iterator.ReadNextAsync();
 
             if (containers.Count == 0)
             {
-				WriteLine($"No containers in database {databaseName}");
+				WriteLine($"No containers in database {_databaseName}");
             }
 
 			var count = 0;
@@ -51,25 +56,25 @@ namespace CosmosDb.ClientDemos.Demos
 			{
 				count++;
 				WriteLine($"\n Container #{count}");
-				await ViewContainer(databaseName, container);
+				await ViewContainer(container);
 			}
 
 			WriteLine($"\nTotal containers in mydb database: {count}");
 		}
 
-		private static async Task ViewContainer(string databaseName, ContainerProperties containerProperties)
+		private async Task ViewContainer(ContainerProperties containerProperties)
 		{
 			WriteLine($"    Container ID: {containerProperties.Id}");
 			WriteLine($"    Last Modified: {containerProperties.LastModified}");
 			WriteLine($"    Partition Key: {containerProperties.PartitionKeyPath}");
 
-			var container = Shared.Client.GetContainer(databaseName, containerProperties.Id);
+			var container = Shared.Client.GetContainer(_databaseName, containerProperties.Id);
 			int? throughput = await container.ReadThroughputAsync();
 
 			WriteLine($"       Throughput: {throughput}");
 		}
 
-		private static async Task CreateContainer(string databaseName, string containerId, int throughput, string partitionKey)
+		public static async Task CreateContainer(string databaseName, string containerId, int throughput = 400, string partitionKey = "/state")
 		{
 			WriteLine($"\n>>> Create Container {containerId} in {databaseName} <<<");
 			WriteLine($"\n Throughput: {throughput} RU/sec");
@@ -84,20 +89,16 @@ namespace CosmosDb.ClientDemos.Demos
 			Database database = Shared.Client.GetDatabase(databaseName);
 			ContainerResponse result = await database.CreateContainerIfNotExistsAsync(containerDef, throughput);
 			ContainerProperties containerProperties = result.Resource;
-
-			WriteLine("Created new container");
-			await ViewContainer(databaseName, containerProperties);	// Intermittent failures!
 		}
 
-		private static async Task DeleteContainer(string databaseName, string containerId)
+		private async Task DeleteContainer(string containerId)
 		{
-			WriteLine($"\n>>> Delete Container {containerId} in {databaseName} <<<");
+			WriteLine($"\n>>> Delete Container {containerId} in {_databaseName} <<<");
 
-			var container = Shared.Client.GetContainer(databaseName, containerId);
+			var container = Shared.Client.GetContainer(_databaseName, containerId);
 			await container.DeleteContainerAsync();
 
-			WriteLine($"Deleted container {containerId} from database {databaseName}");
+			WriteLine($"Deleted container {containerId} from database {_databaseName}");
 		}
-
-	}
+    }
 }

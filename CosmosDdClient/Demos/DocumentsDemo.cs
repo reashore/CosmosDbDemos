@@ -12,21 +12,34 @@ using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
-	public static class DocumentsDemo
+	public class DocumentsDemo
 	{
-		public static async Task Run()
-		{
+        private readonly string _databaseName;
+        private readonly string _containerName;
+
+        public DocumentsDemo(string databaseName, string containerName)
+        {
+            _databaseName = databaseName;
+            _containerName = containerName;
+        }
+
+		public async Task Run()
+        {
+            const string partitionKey = "/address/postalCode";
+
 			Debugger.Break();
 
-			await CreateDocuments();
+            await DatabasesDemo.CreateDatabase(_databaseName);
+            await CreateContainer(_containerName, partitionKey);
 
-			await QueryDocuments();
+            CreateDocuments();
+            QueryDocuments();
 
-            await QueryWithStatefulPaging();
-			await QueryWithStatelessPaging();
+            QueryWithUnstreamedStatefulPaging();
+			await QueryWithUnstreamedStatelessPaging();
 
-            await QueryWithStatefulPagingStreamed();
-            await QueryWithStatelessPagingStreamed();
+            await QueryWithStreamedStatefulPaging();
+            await QueryWithStreamedStatelessPaging();
 
 			QueryWithLinq();
 
@@ -35,36 +48,64 @@ namespace CosmosDb.ClientDemos.Demos
 			await DeleteDocuments();
 		}
 
-		private static async Task CreateDocuments()
-		{
-			Clear();
-			WriteLine(">>> Create Documents <<<");
-			WriteLine();
+        private async Task CreateContainer(string containerId, string partitionKey, int throughput = 400)
+        {
+            ContainerProperties containerDef = new ContainerProperties
+            {
+                Id = containerId,
+                PartitionKeyPath = partitionKey,
+            };
 
-			var container = Shared.Client.GetContainer("mydb", "mystore");
+            Database database = Shared.Client.GetDatabase(_databaseName);
+            ContainerResponse result = await database.CreateContainerIfNotExistsAsync(containerDef, throughput);
 
-			dynamic document1Dynamic = new
-			{
-				id = Guid.NewGuid(),
-				name = "New Customer 1",
-				address = new
-				{
-					addressType = "Main Office",
-					addressLine1 = "123 Main Street",
-					location = new
-					{
-						city = "Brooklyn",
-						stateProvinceName = "New York"
-					},
-					postalCode = "11229",
-					countryRegionName = "United States"
-				},
-			};
+            // todo check status code
+            //HttpStatusCode foo = result.StatusCode;
+        }
 
-			await container.CreateItemAsync(document1Dynamic, new PartitionKey("11229"));
-			WriteLine($"Created new document {document1Dynamic.id} from dynamic object");
+		#region Create Documents
 
-			var document2Json = $@"
+		private void CreateDocuments()
+        {
+            Clear();
+            WriteLine(">>> Create Documents <<<\n");
+            
+            Container container = Shared.Client.GetContainer(_databaseName, _containerName);
+            PartitionKey partitionKey = new PartitionKey("11229");
+
+			CreateDocumentFromDynamicType(container, partitionKey);
+            CreateDocumentsFromJson(container, partitionKey);
+            CreateDocumentFromPoco(container, partitionKey);
+        }
+
+        private static async void CreateDocumentFromDynamicType(Container container, PartitionKey partitionKey)
+        {
+			dynamic customerDocument = new
+            {
+                id = Guid.NewGuid(),
+                name = "New Customer 1",
+                address = new
+                {
+                    addressType = "Main Office",
+                    addressLine1 = "123 Main Street",
+                    location = new
+                    {
+                        city = "Brooklyn",
+                        stateProvinceName = "New York"
+                    },
+                    postalCode = "11229",
+                    countryRegionName = "United States"
+                },
+            };
+
+
+            await container.CreateItemAsync(customerDocument, partitionKey);
+            WriteLine($"Created new document {customerDocument.id} from dynamic object");
+        }
+
+		private static async void CreateDocumentsFromJson(Container container, PartitionKey partitionKey)
+        {
+			string customerJson = $@"
 				{{
 					""id"": ""{Guid.NewGuid()}"",
 					""name"": ""New Customer 2"",
@@ -80,231 +121,234 @@ namespace CosmosDb.ClientDemos.Demos
 					}}
 				}}";
 
-			var document2Object = JsonConvert.DeserializeObject<JObject>(document2Json);
-			await container.CreateItemAsync(document2Object, new PartitionKey("11229"));
-			WriteLine($"Created new document {document2Object["id"].Value<string>()} from JSON string");
+            JObject customerJObject = JsonConvert.DeserializeObject<JObject>(customerJson);
+            await container.CreateItemAsync(customerJObject, partitionKey);
+            WriteLine($"Created new document {customerJObject["id"].Value<string>()} from JSON string");
+        }
 
-			var document3Poco = new Customer
-			{
-				Id = Guid.NewGuid().ToString(),
-				Name = "New Customer 3",
-				Address = new Address
-				{
-					AddressType = "Main Office",
-					AddressLine1 = "123 Main Street",
-					Location = new Location
-					{
-						City = "Brooklyn",
-						StateProvinceName = "New York"
-					},
-					PostalCode = "11229",
-					CountryRegionName = "United States"
-				},
-			};
+		private static async void CreateDocumentFromPoco(Container container, PartitionKey partitionKey)
+        {
+			var customer = new Customer
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "New Customer 3",
+                Address = new Address
+                {
+                    AddressType = "Main Office",
+                    AddressLine1 = "123 Main Street",
+                    Location = new Location
+                    {
+                        City = "Brooklyn",
+                        StateProvinceName = "New York"
+                    },
+                    PostalCode = "11229",
+                    CountryRegionName = "United States"
+                },
+            };
 
-			await container.CreateItemAsync(document3Poco, new PartitionKey("11229"));
-			WriteLine($"Created new document {document3Poco.Id} from typed object");
+            await container.CreateItemAsync(customer, partitionKey);
+            WriteLine($"Created new document {customer.Id} from typed object");
 		}
 
-		private static async Task QueryDocuments()
+		#endregion
+
+		#region Query Documents
+
+		private void QueryDocuments()
 		{
 			Clear();
-			WriteLine(">>> Query Documents (SQL) <<<");
-			WriteLine();
+			WriteLine(">>> Query Documents (SQL) <<</n");
+            WriteLine("Querying for new customer documents (SQL)");
 
-			var container = Shared.Client.GetContainer("mydb", "mystore");
+            var container = Shared.Client.GetContainer(_databaseName, _containerName);
+            const string sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
 
-			WriteLine("Querying for new customer documents (SQL)");
-			const string sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
-
-			// Query for dynamic objects
-			FeedIterator<dynamic> iterator1 = container.GetItemQueryIterator<dynamic>(sql);
-			FeedResponse<dynamic> documents1 = await iterator1.ReadNextAsync();
-			var count = 0;
-			foreach (var document in documents1)
-			{
-				WriteLine($" ({++count}) Id: {document.id}; Name: {document.name};");
-
-				// Dynamic object can be converted into a defined type...
-				var customer = JsonConvert.DeserializeObject<Customer>(document.ToString());
-				WriteLine($"     City: {customer.Address.Location.City}");
-			}
-			WriteLine($"Retrieved {count} new documents as dynamic");
-			WriteLine();
-
-			// Or query for defined types; e.g., Customer
-			FeedIterator<Customer> iterator2 = container.GetItemQueryIterator<Customer>(sql);
-			FeedResponse<Customer> documents2 = await iterator2.ReadNextAsync();
-			count = 0;
-			foreach (var customer in documents2)
-			{
-				WriteLine($" ({++count}) Id: {customer.Id}; Name: {customer.Name};");
-				WriteLine($"     City: {customer.Address.Location.City}");
-			}
-			WriteLine($"Retrieved {count} new documents as Customer");
-			WriteLine();
-
-			// You only get back the first "page" (up to MaxItemCount)
+            QueryUsingDynamicType(container, sql);
+            QueryUsingPoco(container, sql);
 		}
 
-        private static async Task QueryWithStatefulPaging()
+        private async void QueryUsingDynamicType(Container container, string sql)
+        {
+            FeedIterator<dynamic> iterator = container.GetItemQueryIterator<dynamic>(sql);
+            FeedResponse<dynamic> documents = await iterator.ReadNextAsync();
+            int count = 0;
+
+            foreach (var document in documents)
+            {
+                WriteLine($" ({++count}) Id: {document.id}; Name: {document.name};");
+
+                // Convert dynamic object to poco
+                Customer customer = JsonConvert.DeserializeObject<Customer>(document.ToString());
+                WriteLine($"     City: {customer.Address.Location.City}");
+            }
+
+            WriteLine($"Retrieved {count} new documents as dynamic\n");
+        }
+
+		private async void QueryUsingPoco(Container container, string sql)
+        {
+            FeedIterator<Customer> iterator = container.GetItemQueryIterator<Customer>(sql);
+            FeedResponse<Customer> customers = await iterator.ReadNextAsync();
+            int count = 0;
+
+            foreach (Customer customer in customers)
+            {
+                WriteLine($" ({++count}) Id: {customer.Id}; Name: {customer.Name};");
+                WriteLine($"     City: {customer.Address.Location.City}");
+            }
+
+            WriteLine($"Retrieved {count} new documents as Customer\n");
+        }
+
+        #endregion
+
+        #region Unstreamed Statefull Paging
+
+        private void QueryWithUnstreamedStatefulPaging()
 		{
 			Clear();
-			WriteLine(">>> Query Documents (paged results, stateful) <<<");
-			WriteLine();
+			WriteLine(">>> Query Documents (paged results, stateful) <<<\n");
 
-			var container = Shared.Client.GetContainer("mydb", "mystore");
-			const string sql = "SELECT * FROM c";
+			Container container = Shared.Client.GetContainer(_databaseName, _containerName);
+            const string sql = "SELECT * FROM c";
 
-			// Get first page of large resultset
-			WriteLine("Querying for all documents (first page)");
-			FeedIterator<Customer> iterator = container.GetItemQueryIterator<Customer>(sql);
-			FeedResponse<Customer> documents = await iterator.ReadNextAsync();
-			var itemCount = 0;
-			foreach (var customer in documents)
+            GetFirstPageFromResultSet(container, sql);
+            GetAllPagesFromResultSet(container, sql);
+		}
+
+        private static async void GetFirstPageFromResultSet(Container container, string sql)
+        {
+            FeedIterator<Customer> feedIterator = container.GetItemQueryIterator<Customer>(sql);
+            FeedResponse<Customer> customers = await feedIterator.ReadNextAsync();
+            int itemCount = 0;
+
+            foreach (Customer customer in customers)
+            {
+                WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+            }
+
+            WriteLine($"Retrieved {itemCount} documents in first page\n");
+        }
+
+        private static async void GetAllPagesFromResultSet(Container container, string sql)
+        {
+            var feedIterator = container.GetItemQueryIterator<Customer>(sql);
+            int itemCount = 0;
+            int pageCount = 0;
+
+            while (feedIterator.HasMoreResults)
+            {
+                pageCount++;
+                FeedResponse<Customer> customers = await feedIterator.ReadNextAsync();
+
+                foreach (var customer in customers)
+                {
+                    WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
+                }
+            }
+
+            WriteLine($"Retrieved {itemCount} documents from multi-page result set\n");
+        }
+
+        #endregion
+
+        #region Unstreamed Stateless Paging
+
+        private async Task QueryWithUnstreamedStatelessPaging()
+		{
+			string continuationToken = default;
+            const string sql = "SELECT * FROM c";
+            Container container = Shared.Client.GetContainer(_databaseName, _containerName);
+
+            do
+            {
+				continuationToken = await QueryFetchNextPage(container, sql, continuationToken);
+			} 
+            while (continuationToken != null);
+		}
+
+		private static async Task<string> QueryFetchNextPage(Container container, string sql, string continuationToken)
+		{
+            FeedIterator<Customer> feedIterator = container.GetItemQueryIterator<Customer>(sql, continuationToken);
+			FeedResponse<Customer> customers = await feedIterator.ReadNextAsync();
+			int itemCount = 0;
+
+            foreach (Customer customer in customers)
 			{
 				WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
 			}
-			WriteLine($"Retrieved {itemCount} documents in first page");
-			WriteLine();
 
-			// Get all pages of large resultset using iterator.HasMoreResults
-			WriteLine("Querying for all documents (full resultset, stateful)");
-			iterator = container.GetItemQueryIterator<Customer>(sql);
-			itemCount = 0;
-			var pageCount = 0;
-			while (iterator.HasMoreResults)
-			{
-				pageCount++;
-				documents = await iterator.ReadNextAsync();
-				foreach (var customer in documents)
-				{
-					WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
-				}
-			}
-			WriteLine($"Retrieved {itemCount} documents (full resultset, stateful)");
-			WriteLine();
-		}
-
-		private static async Task QueryWithStatelessPaging()
-		{
-			// Get all pages of large resultset using continuation token
-			WriteLine("Querying for all documents (full resultset, stateless)");
-
-			var continuationToken = default(string);
-			do
-			{
-				continuationToken = await QueryFetchNextPage(continuationToken);
-			} while (continuationToken != null);
-
-			WriteLine("Retrieved all documents (full resultset, stateless)");
-			WriteLine();
-		}
-
-		private static async Task<string> QueryFetchNextPage(string continuationToken)
-		{
-			var container = Shared.Client.GetContainer("mydb", "mystore");
-			const string sql = "SELECT * FROM c";
-
-			FeedIterator<Customer> iterator = container.GetItemQueryIterator<Customer>(sql, continuationToken);
-			FeedResponse<Customer> page = await iterator.ReadNextAsync();
-			var itemCount = 0;
-
-			if (continuationToken != null)
-			{
-				WriteLine($"... resuming with continuation {continuationToken}");
-			}
-
-			foreach (var customer in page)
-			{
-				WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
-			}
-
-			continuationToken = page.ContinuationToken;
-
-			if (continuationToken == null)
-			{
-				WriteLine("... no more continuation; resultset complete");
-			}
+			continuationToken = customers.ContinuationToken;
 
 			return continuationToken;
 		}
 
-        private static async Task QueryWithStatefulPagingStreamed()
+        #endregion
+
+        #region Steamed Stateful Paging
+
+        private async Task QueryWithStreamedStatefulPaging()
         {
-			Clear();
-			WriteLine(">>> Query Documents with Streaming <<<");
-            WriteLine();
+            Container container = Shared.Client.GetContainer(_databaseName, _containerName);
 
-            var container = Shared.Client.GetContainer("mydb", "mystore");
             const string sql = "SELECT * FROM c";
+            FeedIterator feedIterator = container.GetItemQueryStreamIterator(sql);
+            int itemCount = 0;
+            int pageCount = 0;
 
-            // Get all pages of large resultset using iterator.HasMoreResults
-            WriteLine("Querying for all documents (full resultset, stateful, w/streaming iterator)");
-            var streamIterator = container.GetItemQueryStreamIterator(sql);
-            var itemCount = 0;
-            var pageCount = 0;
-            while (streamIterator.HasMoreResults)
+            while (feedIterator.HasMoreResults)
             {
                 pageCount++;
-                var results = await streamIterator.ReadNextAsync();
-                var stream = results.Content;
+                ResponseMessage results = await feedIterator.ReadNextAsync();
+                Stream stream = results.Content;
 
-                using (var sr = new StreamReader(stream))
+                using (StreamReader streamReader = new StreamReader(stream))
                 {
-                    var json = await sr.ReadToEndAsync();
-                    var jobj = JsonConvert.DeserializeObject<JObject>(json);
-                    var jarr = (JArray)jobj["Documents"];
-                    foreach (var item in jarr)
+                    string json = await streamReader.ReadToEndAsync();
+                    JObject deserializeObject = JsonConvert.DeserializeObject<JObject>(json);
+                    JArray jArray = (JArray)deserializeObject["Documents"];
+
+                    foreach (JToken item in jArray)
                     {
-                        var customer = JsonConvert.DeserializeObject<Customer>(item.ToString());
+                        Customer customer = JsonConvert.DeserializeObject<Customer>(item.ToString());
                         WriteLine($" ({pageCount}.{++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
                     }
                 }
             }
 
-            WriteLine($"Retrieved {itemCount} documents (full resultset, stateful, w/streaming iterator");
-            WriteLine();
+            WriteLine($"Retrieved {itemCount} documents\n");
         }
 
-        private static async Task QueryWithStatelessPagingStreamed()
+        private async Task QueryWithStreamedStatelessPaging()
         {
-            // Get all pages of large resultset using continuation token
-            WriteLine("Querying for all documents (full resultset, stateless, w/streaming iterator)");
+            string continuationToken = default;
 
-            var continuationToken = default(string);
             do
             {
                 continuationToken = await QueryFetchNextPageStreamed(continuationToken);
-            } while (continuationToken != null);
+            } 
+            while (continuationToken != null);
 
-            WriteLine("Retrieved all documents (full resultset, stateless, w/streaming iterator)");
-            WriteLine();
+            WriteLine("Retrieved all documents\n");
         }
 
-        private static async Task<string> QueryFetchNextPageStreamed(string continuationToken)
+        private async Task<string> QueryFetchNextPageStreamed(string continuationToken)
         {
-            var container = Shared.Client.GetContainer("mydb", "mystore");
+            var container = Shared.Client.GetContainer(_databaseName, _containerName);
+
             const string sql = "SELECT * FROM c";
+            FeedIterator streamIterator = container.GetItemQueryStreamIterator(sql, continuationToken);
+            ResponseMessage response = await streamIterator.ReadNextAsync();
+            Stream stream = response.Content;
+            int itemCount = 0;
 
-            var streamIterator = container.GetItemQueryStreamIterator(sql, continuationToken);
-            var response = await streamIterator.ReadNextAsync();
-
-            var itemCount = 0;
-
-            if (continuationToken != null)
+            using (StreamReader streamReader = new StreamReader(stream))
             {
-                WriteLine($"... resuming with continuation {continuationToken}");
-            }
+                string json = await streamReader.ReadToEndAsync();
+                JObject jObject = JsonConvert.DeserializeObject<JObject>(json);
+                JArray jArray = (JArray)jObject["Documents"];
 
-            var stream = response.Content;
-            using (var sr = new StreamReader(stream))
-            {
-                var json = await sr.ReadToEndAsync();
-                var jobj = JsonConvert.DeserializeObject<JObject>(json);
-                var jarr = (JArray)jobj["Documents"];
-
-                foreach (var item in jarr)
+                foreach (JToken item in jArray)
                 {
                     var customer = JsonConvert.DeserializeObject<Customer>(item.ToString());
                     WriteLine($" ({++itemCount}) Id: {customer.Id}; Name: {customer.Name};");
@@ -312,34 +356,28 @@ namespace CosmosDb.ClientDemos.Demos
             }
 
             continuationToken = response.Headers.ContinuationToken;
-
-            if (continuationToken == null)
-            {
-                WriteLine("... no more continuation; resultset complete");
-            }
-
             return continuationToken;
         }
 
-		private static void QueryWithLinq()
+        #endregion
+
+        private void QueryWithLinq()
 		{
-			Clear();
-			WriteLine(">>> Query Documents (LINQ) <<<");
-			WriteLine();
+			Container container = Shared.Client.GetContainer(_databaseName, _containerName);
+            const string regionName = "United Kingdom";
+            IOrderedQueryable<Customer> customers = container.GetItemLinqQueryable<Customer>(true);
 
-			WriteLine("Querying for UK customers (LINQ)");
-			var container = Shared.Client.GetContainer("mydb", "mystore");
+            var query = 
+                from d in customers
+				where d.Address.CountryRegionName == regionName
+                select new
+				{
+					d.Id,
+					d.Name,
+					d.Address.Location.City
+				};
 
-			var q = from d in container.GetItemLinqQueryable<Customer>(true)
-					where d.Address.CountryRegionName == "United Kingdom"
-					select new
-					{
-						d.Id,
-						d.Name,
-						d.Address.Location.City
-					};
-
-			var documents = q.ToList();
+			var documents = query.ToList();
 
 			WriteLine($"Found {documents.Count} UK customers");
 
@@ -348,67 +386,63 @@ namespace CosmosDb.ClientDemos.Demos
 				dynamic d = document;
 				WriteLine($" Id: {d.Id}; Name: {d.Name}; City: {d.City}");
 			}
-
-			WriteLine();
 		}
 
-		private static async Task ReplaceDocuments()
+		private async Task ReplaceDocuments()
 		{
-			Clear();
-			WriteLine(">>> Replace Documents <<<");
-			WriteLine();
+			Container container = Shared.Client.GetContainer(_databaseName, _containerName);
 
-			var container = Shared.Client.GetContainer("mydb", "mystore");
+			string sql = "SELECT VALUE COUNT(c) FROM c WHERE c.isNew = true";
+            FeedIterator<int> iterator1 = container.GetItemQueryIterator<int>(sql);
+            FeedResponse<int> feedResponse1 = await iterator1.ReadNextAsync();
+			int count = feedResponse1.First();
 
-			WriteLine("Querying for documents with 'isNew' flag");
-			var sql = "SELECT VALUE COUNT(c) FROM c WHERE c.isNew = true";
-			var count = (await (container.GetItemQueryIterator<int>(sql)).ReadNextAsync()).First();
-			WriteLine($"Documents with 'isNew' flag: {count}");
-			WriteLine();
+			WriteLine($"Documents with 'isNew' flag: {count}\n");
+            WriteLine("Querying for documents to be updated");
 
-			WriteLine("Querying for documents to be updated");
 			sql = "SELECT * FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
-			List<dynamic> documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
-			WriteLine($"Found {documents.Count} documents to be updated");
-			foreach (var document in documents)
+            FeedIterator<dynamic> feedIterator2 = container.GetItemQueryIterator<dynamic>(sql);
+            FeedResponse<dynamic> feedResponse2 = await feedIterator2.ReadNextAsync();
+			List<dynamic> documentsList = feedResponse2.ToList();
+
+			WriteLine($"Found {documentsList.Count} documents to be updated");
+
+			foreach (var document in documentsList)
 			{
 				document.isNew = true;
-				var result = await container.ReplaceItemAsync<dynamic>(document, (string)document.id);
-				var updatedDocument = result.Resource;
+				dynamic result = await container.ReplaceItemAsync<dynamic>(document, (string)document.id);
+				dynamic updatedDocument = result.Resource;
 				WriteLine($"Updated document 'isNew' flag: {updatedDocument.isNew}");
 			}
-			WriteLine();
 
-			WriteLine("Querying for documents with 'isNew' flag");
 			sql = "SELECT VALUE COUNT(c) FROM c WHERE c.isNew = true";
-			count = (await (container.GetItemQueryIterator<int>(sql)).ReadNextAsync()).First();
-			WriteLine($"Documents with 'isNew' flag: {count}");
-			WriteLine();
+            FeedIterator<int> feedIterator3 = container.GetItemQueryIterator<int>(sql);
+            FeedResponse<int> feedResponse3 = await feedIterator3.ReadNextAsync();
+			count = feedResponse3.First();
+
+			WriteLine($"Documents with 'isNew' flag: {count}\n");
 		}
 
-		private static async Task DeleteDocuments()
+		private async Task DeleteDocuments()
 		{
-			Clear();
-			WriteLine(">>> Delete Documents <<<");
-			WriteLine();
+			var container = Shared.Client.GetContainer(_databaseName, _containerName);
 
-			var container = Shared.Client.GetContainer("mydb", "mystore");
-
-			WriteLine("Querying for documents to be deleted");
 			const string sql = "SELECT c.id, c.address.postalCode FROM c WHERE STARTSWITH(c.name, 'New Customer') = true";
 			FeedIterator<dynamic> iterator = container.GetItemQueryIterator<dynamic>(sql);
-			List<dynamic> documents = (await iterator.ReadNextAsync()).ToList();
+            FeedResponse<dynamic> feedResponse = await iterator.ReadNextAsync();
+			List<dynamic> documents = feedResponse.ToList();
+
 			WriteLine($"Found {documents.Count} documents to be deleted");
 
 			foreach (var document in documents)
 			{
 				string id = document.id;
 				string pk = document.postalCode;
+
 				await container.DeleteItemAsync<dynamic>(id, new PartitionKey(pk));
 			}
 
-			WriteLine($"Deleted {documents.Count} new customer documents");
-			WriteLine();
+			WriteLine($"Deleted {documents.Count} new customer documents\n");
 		}
     }
 }

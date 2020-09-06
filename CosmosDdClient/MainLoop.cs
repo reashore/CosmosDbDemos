@@ -13,11 +13,18 @@ namespace CosmosDb.ClientDemos
 
         public void Run()
         {
+            const string databaseName = "Database1";
+            const string containerName = "Container1";
+
+            DatabasesDemo databasesDemo = new DatabasesDemo(databaseName);
+            ContainersDemo containersDemo = new ContainersDemo(databaseName);
+            DocumentsDemo documentsDemo = new DocumentsDemo(databaseName, containerName);
+
             _demoMethods = new Dictionary<string, Func<Task>>
             {
-                { "DB", DatabasesDemo.Run },
-                { "CO", ContainersDemo.Run },
-                { "DO", DocumentsDemo.Run },
+                { "DB", databasesDemo.Run },
+                { "CO", containersDemo.Run },
+                { "DO", documentsDemo.Run },
                 { "IX", IndexingDemo.Run },
                 { "C", Cleanup.Run }
             };

@@ -6,21 +6,25 @@ using static System.Console;
 
 namespace CosmosDb.ClientDemos.Demos
 {
-	public static class DatabasesDemo
+	public class DatabasesDemo
 	{
-		public static async Task Run()
-		{
-			// todo create instance variable?
-            const string databaseName = "Database1";
+        private readonly string _databaseName;
 
+        public DatabasesDemo(string databaseName)
+        {
+            _databaseName = databaseName;
+        }
+
+		public async Task Run()
+		{
             Debugger.Break();
 
 			await ViewDatabases();
 
-			await CreateDatabase(databaseName);
+			await CreateDatabase(_databaseName);
 			await ViewDatabases();
 
-			await DeleteDatabase(databaseName);
+			await DeleteDatabase();
 			await ViewDatabases();
 		}
 
@@ -59,11 +63,11 @@ namespace CosmosDb.ClientDemos.Demos
 			WriteLine($" Database Id: {database.Id}; Modified: {database.LastModified}");
 		}
 
-		private static async Task DeleteDatabase(string databaseName)
+		private async Task DeleteDatabase()
 		{
-			WriteLine($"\n>>> Delete Database {databaseName} <<<");
+			WriteLine($"\n>>> Delete Database {_databaseName} <<<");
 
-			DatabaseResponse result = await Shared.Client.GetDatabase(databaseName).DeleteAsync();
+			DatabaseResponse result = await Shared.Client.GetDatabase(_databaseName).DeleteAsync();
 			// todo check result.StatusCode
 		}
     }
