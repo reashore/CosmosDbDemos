@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDb.ClientDemos", "Cos
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDb.ServerSide", "CosmosDbServer\CosmosDb.ServerSide.csproj", "{645112D2-6D10-4730-8CC5-376161392F84}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosDb.TableStorage", "CosmosDbTableStorage\CosmosDb.TableStorage.csproj", "{9800BBD0-D21D-4EA7-93B3-F817BB5ADD84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{645112D2-6D10-4730-8CC5-376161392F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{645112D2-6D10-4730-8CC5-376161392F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{645112D2-6D10-4730-8CC5-376161392F84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9800BBD0-D21D-4EA7-93B3-F817BB5ADD84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9800BBD0-D21D-4EA7-93B3-F817BB5ADD84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9800BBD0-D21D-4EA7-93B3-F817BB5ADD84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9800BBD0-D21D-4EA7-93B3-F817BB5ADD84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -232,7 +232,7 @@ namespace CosmosDb.ClientDemos.Demos
 
         private static async void GetAllPagesFromResultSet(Container container, string sql)
         {
-            var feedIterator = container.GetItemQueryIterator<Customer>(sql);
+            FeedIterator<Customer> feedIterator = container.GetItemQueryIterator<Customer>(sql);
             int itemCount = 0;
             int pageCount = 0;
 

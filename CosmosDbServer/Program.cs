@@ -81,12 +81,12 @@ Q  Quit
                 }
                 Console.WriteLine($"Error: {exception.Message}");
             }
+
             Console.WriteLine();
             Console.Write("Done. Press any key to continue...");
             Console.ReadKey(true);
             Console.Clear();
             ShowMenu();
         }
-
     }
 }

@@ -81,7 +81,7 @@ namespace CosmosDb.ServerSide.Demos
 			const string sql = "SELECT c.id, c.name FROM c WHERE udf.udfRegEx(c.name, 'Rental') != null";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			List<dynamic> documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			List<dynamic> documents = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).ToList();
 
 			Console.WriteLine($"Found {documents.Count} Rental customers:");
 			foreach (var document in documents)
@@ -101,7 +101,7 @@ namespace CosmosDb.ServerSide.Demos
 				WHERE udf.udfIsNorthAmerica(c.address.countryRegionName) = true";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			List<dynamic> documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			List<dynamic> documents = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).ToList();
 
 			Console.WriteLine($"Found {documents.Count} North American customers; first 20:");
 			foreach (var document in documents.Take(20))
@@ -117,7 +117,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine();
 			Console.WriteLine("Querying for non North American customers");
 
-			documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			documents = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).ToList();
 
 			Console.WriteLine($"Found {documents.Count} non North American customers; first 20:");
 			foreach (var document in documents.Take(20))
@@ -134,7 +134,7 @@ namespace CosmosDb.ServerSide.Demos
 			const string sql = "SELECT c.name, udf.udfFormatCityStateZip(c) AS csz FROM c";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			List<dynamic> documents = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			List<dynamic> documents = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).ToList();
 			foreach (var document in documents.Take(20))
 			{
 				Console.WriteLine($" {document.name} located in {document.csz}");

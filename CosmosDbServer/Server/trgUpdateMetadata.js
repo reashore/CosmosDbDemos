@@ -1,6 +1,6 @@
 ﻿function trgUpdateMetadata() {
 
-	var context = getContext();
+	const context = getContext();
 	var collection = context.getCollection();
 	var collectionLink = collection.getSelfLink();
 	var request = context.getRequest();

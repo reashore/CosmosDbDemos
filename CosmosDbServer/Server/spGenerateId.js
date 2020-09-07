@@ -33,13 +33,12 @@
 
     function generateRandom5() {
         var text = "";
-        var possible = "0123456789";
+        const possible = "0123456789";
 
-        for (var i = 0; i < 5; i++) {
+        for (let i = 0; i < 5; i++) {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
 
         return text;
     }
-
 }

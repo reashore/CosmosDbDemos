@@ -14,7 +14,7 @@
 	var properWeekDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 	var isValid = false;
-	for (var i = 0; i < 7; i++) {
+	for (let i = 0; i < 7; i++) {
 		if (testForWeekDays[i] === testForWeekDay) {
 			doc.weekdayOff = properWeekDays[i];		// Set proper weekday spelling
 			doc.weekdayNumberOff = i + 1;			// Set weekday number property (1-7)

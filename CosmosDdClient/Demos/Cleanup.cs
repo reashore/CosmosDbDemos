@@ -39,7 +39,7 @@ namespace CosmosDb.ClientDemos.Demos
 
                 var container = Shared.Client.GetContainer("mydb", "mystore");
 
-                List<dynamic> documentKeys = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+                List<dynamic> documentKeys = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).ToList();
 
                 foreach (var documentKey in documentKeys)
                 {

@@ -27,9 +27,9 @@ namespace CosmosDb.ClientDemos.Demos
 			await DatabasesDemo.CreateDatabase(_databaseName);
             await ViewContainers();
 
-            await CreateContainer(_databaseName, container1Id, throughput, partitionKey);
+            await CreateContainer(_databaseName, container1Id);
             await ViewContainers();
-			await CreateContainer(_databaseName, container2Id, throughput, partitionKey);
+			await CreateContainer(_databaseName, container2Id);
 			await ViewContainers();
 
 			await DeleteContainer(container1Id);

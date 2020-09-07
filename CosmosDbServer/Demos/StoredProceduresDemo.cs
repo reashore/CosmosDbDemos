@@ -24,13 +24,9 @@ namespace CosmosDb.ServerSide.Demos
 			await DeleteStoredProcedures();
 		}
 
-		// Create stored procedures
-
 		private static async Task CreateStoredProcedures()
 		{
-			Console.WriteLine();
-			Console.WriteLine(">>> Create Stored Procedures <<<");
-			Console.WriteLine();
+			Console.WriteLine("\n>>> Create Stored Procedures <<<\n");
 
 			await CreateStoredProcedure("spHelloWorld");
 			await CreateStoredProcedure("spSetNorthAmerica");
@@ -51,34 +47,28 @@ namespace CosmosDb.ServerSide.Demos
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 			var result = await container.Scripts.CreateStoredProcedureAsync(sprocProps);
+
 			Console.WriteLine($"Created stored procedure {sprocId} ({result.RequestCharge} RUs);");
 		}
 
-		// View stored procedures
-
 		private static async Task ViewStoredProcedures()
 		{
-			Console.WriteLine();
-			Console.WriteLine(">>> View Stored Procedures <<<");
-			Console.WriteLine();
+			Console.WriteLine("\n>>> View Stored Procedures <<<\n");
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
 
 			FeedIterator<StoredProcedureProperties> iterator = container.Scripts.GetStoredProcedureQueryIterator<StoredProcedureProperties>();
 			FeedResponse<StoredProcedureProperties> sprocs = await iterator.ReadNextAsync();
+            var count = 0;
 
-			var count = 0;
 			foreach (var sproc in sprocs)
 			{
 				count++;
 				Console.WriteLine($" Stored procedure Id: {sproc.Id}; Modified: {sproc.LastModified}");
 			}
 
-			Console.WriteLine();
-			Console.WriteLine($"Total stored procedures: {count}");
+			Console.WriteLine($"\nTotal stored procedures: {count}");
 		}
-
-		// Execute stored procedures
 
 		private static async Task ExecuteStoredProcedures()
 		{
@@ -102,21 +92,19 @@ namespace CosmosDb.ServerSide.Demos
 
 		private static async Task Execute_spHelloWorld()
 		{
-			Console.WriteLine();
-			Console.WriteLine("Execute spHelloWorld stored procedure");
+			Console.WriteLine("\nExecute spHelloWorld stored procedure");
 
-			var scripts = Shared.Client.GetContainer("mydb", "mystore").Scripts;
-			var pk = new PartitionKey(string.Empty);
-			StoredProcedureExecuteResponse<string> result = await scripts.ExecuteStoredProcedureAsync<string>("spHelloWorld", pk, null);
-			var message = result.Resource;
+			Scripts scripts = Shared.Client.GetContainer("mydb", "mystore").Scripts;
+			PartitionKey partitionKey = new PartitionKey(string.Empty);
+			StoredProcedureExecuteResponse<string> result = await scripts.ExecuteStoredProcedureAsync<string>("spHelloWorld", partitionKey, null);
+			string message = result.Resource;
 
 			Console.WriteLine($"Result: {message}");
 		}
 
 		private static async Task Execute_spSetNorthAmerica1()
 		{
-			Console.WriteLine();
-			Console.WriteLine("Execute spSetNorthAmerica (country = United States)");
+			Console.WriteLine("\nExecute spSetNorthAmerica (country = United States)\n");
 
 			// Should succeed with isNorthAmerica = true
 			var id = Guid.NewGuid().ToString();
@@ -131,9 +119,9 @@ namespace CosmosDb.ServerSide.Demos
 				}
 			};
 
-			var container = Shared.Client.GetContainer("mydb", "mystore");
-			var pk = new PartitionKey(documentDefinition.address.postalCode);
-			StoredProcedureExecuteResponse<dynamic> result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
+			Container container = Shared.Client.GetContainer("mydb", "mystore");
+			PartitionKey partitionKey = new PartitionKey(documentDefinition.address.postalCode);
+			StoredProcedureExecuteResponse<dynamic> result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", partitionKey, new[] { documentDefinition, true });
 			var document = result.Resource;
 
 			var country = document.address.countryRegionName;
@@ -143,7 +131,7 @@ namespace CosmosDb.ServerSide.Demos
 			Console.WriteLine($" Country = {country}");
 			Console.WriteLine($" Is North America = {isNorthAmerica}");
 
-			await container.DeleteItemAsync<dynamic>(id, pk);
+			await container.DeleteItemAsync<dynamic>(id, partitionKey);
 		}
 
 		private static async Task Execute_spSetNorthAmerica2()

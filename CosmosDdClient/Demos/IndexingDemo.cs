@@ -102,7 +102,7 @@ namespace CosmosDb.ClientDemos.Demos
 			sql = "SELECT * FROM c ORDER BY c.miscellaneous.title";
 			try
 			{
-				result = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
+				result = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
 			}
 			catch (Exception exception)
 			{
@@ -136,7 +136,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 			try
 			{
-				FeedResponse<dynamic> page1 = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
+				FeedResponse<dynamic> page1 = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
 			}
 			catch (Exception exception)
 			{
@@ -160,7 +160,7 @@ namespace CosmosDb.ClientDemos.Demos
 
 			// The query works now
 			WriteLine("Multi-property ORDER BY with composite indexes");
-			FeedResponse<Customer> page = await (container.GetItemQueryIterator<Customer>(sql)).ReadNextAsync();
+			FeedResponse<Customer> page = await container.GetItemQueryIterator<Customer>(sql).ReadNextAsync();
 
 			foreach (var doc in page)
 			{
@@ -194,9 +194,10 @@ namespace CosmosDb.ClientDemos.Demos
 
 			for (var i = 1; i <= 1000; i++)
 			{
-				var longitude = (i % 100 == 0 ? -73.992 : -119.417931);
-				var latitude = (i % 100 == 0 ? 40.73104 : 36.778259);
-				var state = (i % 100 == 0 ? "NY" : "CA");
+				var longitude = i % 100 == 0 ? -73.992 : -119.417931;
+				var latitude = i % 100 == 0 ? 40.73104 : 36.778259;
+				var state = i % 100 == 0 ? "NY" : "CA";
+
 				dynamic doc = new
 				{
 					id = Guid.NewGuid().ToString(),

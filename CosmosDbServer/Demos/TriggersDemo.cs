@@ -138,7 +138,7 @@ namespace CosmosDb.ServerSide.Demos
 		{
 			string sql = $"SELECT * FROM c WHERE c.id = '{documentId}'";
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			var document = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).FirstOrDefault();
+			var document = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).FirstOrDefault();
 
 			document.weekdayOff = weekdayOff;
 
@@ -198,7 +198,7 @@ namespace CosmosDb.ServerSide.Demos
 				WHERE c.address.postalCode IN('11229', '11235')
 			";
 
-			FeedResponse<dynamic> documentIds = await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync();
+			FeedResponse<dynamic> documentIds = await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync();
 
 			foreach (var documentKey in documentIds)
 			{
@@ -214,7 +214,7 @@ namespace CosmosDb.ServerSide.Demos
 			const string sql = @"SELECT * FROM c WHERE c.isMetaDoc";
 
 			var container = Shared.Client.GetContainer("mydb", "mystore");
-			List<dynamic> metaDocs = (await (container.GetItemQueryIterator<dynamic>(sql)).ReadNextAsync()).ToList();
+			List<dynamic> metaDocs = (await container.GetItemQueryIterator<dynamic>(sql).ReadNextAsync()).ToList();
 
 			Console.WriteLine();
 			Console.WriteLine($" Found {metaDocs.Count} metadata documents:");
