@@ -74,7 +74,7 @@ namespace CosmosDb.ClientDemos.Demos
 			WriteLine($"       Throughput: {throughput}");
 		}
 
-		public static async Task CreateContainer(string databaseName, string containerId, int throughput = 400, string partitionKey = "/state")
+        private static async Task CreateContainer(string databaseName, string containerId, int throughput = 400, string partitionKey = "/state")
 		{
 			WriteLine($"\n>>> Create Container {containerId} in {databaseName} <<<");
 			WriteLine($"\n Throughput: {throughput} RU/sec");
